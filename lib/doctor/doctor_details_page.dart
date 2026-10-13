@@ -1,371 +1,263 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../chat_screen.dart';
+import '../ui/app_widgets.dart';
 import 'model/doctor.dart';
+import 'widget/doctor_card.dart';
 
 class DoctorDetailPage extends StatefulWidget {
   final Doctor doctor;
-
   const DoctorDetailPage({super.key, required this.doctor});
-
   @override
   State<DoctorDetailPage> createState() => _DoctorDetailPageState();
 }
 
 class _DoctorDetailPageState extends State<DoctorDetailPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _requestDatabase = FirebaseDatabase.instance
-      .ref('Requests'); //  it will store appointments requests
+  final _description = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  DateTime? _date;
+  TimeOfDay? _time;
+  bool _saving = false;
+  String? _error;
+  @override
+  void dispose() {
+    _description.dispose();
+    super.dispose();
+  }
 
-  final TextEditingController _descriptionController = TextEditingController();
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  Future<void> _selectDate() async {
+    final value = await showDatePicker(
+        context: context,
+        initialDate: _date ?? DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2101));
+    if (value != null && mounted) setState(() => _date = value);
+  }
+
+  Future<void> _selectTime() async {
+    final value = await showTimePicker(
+        context: context, initialTime: _time ?? TimeOfDay.now());
+    if (value != null && mounted) setState(() => _time = value);
+  }
+
+  Future<void> _open(Uri uri) async {
+    try {
+      if (!await launchUrl(uri)) throw StateError('Unavailable');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text(context.tr('Unable to open this link on your device.'))));
+      }
+    }
+  }
+
+  Future<void> _book() async {
+    if (_saving) return;
+    final valid = _formKey.currentState!.validate();
+    if (_date == null || _time == null) {
+      setState(() => _error = 'Choose both a date and a time.');
+      return;
+    }
+    if (!valid) return;
+    final date = DateFormat('MM/dd/yyyy').format(_date!);
+    final time = _time!.format(context);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final request = FirebaseDatabase.instance.ref('Requests').push();
+      await request.set({
+        'date': date,
+        'time': time,
+        'description': _description.text.trim(),
+        'id': request.key,
+        'receiver': widget.doctor.uid,
+        'sender': uid,
+        'status': 'pending',
+      });
+      if (!mounted) return;
+      setState(() {
+        _date = null;
+        _time = null;
+        _description.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context
+              .tr('Appointment requested. Check My account for updates.'))));
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error =
+            'Unable to request this appointment. Your details are kept; try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final doctor = widget.doctor;
+    final hasLocation = doctor.latitude != 0 || doctor.longitude != 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Doctor Details'),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Section (Same as before)
-              Row(
+          title: Text(context.tr('Doctor profile')),
+          actions: const [LanguageButton()]),
+      body: SafeArea(
+          child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ContentWidth(
+            maxWidth: 880,
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 115,
-                    height: 115,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF0EFFF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: widget.doctor.profileImageUrl.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              widget.doctor.profileImageUrl,
-                              fit: BoxFit.fitWidth,
-                            ),
-                          )
-                        : const Icon(Icons.person,
-                            size: 60, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${widget.doctor.firstName} ${widget.doctor.lastName}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.doctor.category,
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'From: ${widget.doctor.city}',
-                        // Example location; replace with actual data if available
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: const Color(0xffFA9600),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Image.asset(
-                              'assets/images/phone_call.png',
-                              width: 30,
-                              height: 30,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () {
-                              // Add phone call functionality
-                              _makePhoneCall(widget.doctor.phoneNumber);
-                            },
-                          ),
-                          IconButton(
-                            icon: Image.asset(
-                              'assets/images/chat_icon.png',
-                              width: 30,
-                              height: 30,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () {
-                              // Add chat functionality
-                              String currentUserId = _auth.currentUser!.uid;
-                              String docName =
-                                  '${widget.doctor.firstName.toString()} ${widget.doctor.lastName.toString()}';
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatScreen(
-                                    doctorId: widget.doctor.uid,
-                                    doctorName: docName,
-                                    patientId: currentUserId,
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffFFB342),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    // Add map location functionality
-                    _openMap();
-                  },
-                  child: Text(
-                    'VIEW LOCATION ON MAP',
-                    style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 50),
-              Text(
-                'Select Date & Time',
-                style: GoogleFonts.poppins(
-                    fontSize: 17, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: const Color(0xffF0EFFF),
-                  border: Border.all(
-                    color: const Color(0xffC8C4FF),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff0064FA),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => _selectDate(context),
-                            child: Text(
-                              _selectedDate == null
-                                  ? 'Select Date'
-                                  : DateFormat('MM/dd/yyyy')
-                                      .format(_selectedDate!),
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15, letterSpacing: 0.6),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff0064FA),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => _selectTime(context),
-                            child: Text(
-                              _selectedTime == null
-                                  ? 'Select Time'
-                                  : _selectedTime!.format(context),
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15, letterSpacing: 0.6),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _descriptionController,
-                      style: GoogleFonts.poppins(
-                          fontSize: 14, color: Colors.black),
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'Description',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xffF0EFFF),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff0064FA),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    // Add appointment booking functionality
-                    _bookAppointment();
-                  },
-                  child: Text(
-                    'BOOK APPOINTMENT',
-                    style: GoogleFonts.poppins(fontSize: 16, letterSpacing: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+                  DoctorCard(doctor: doctor),
+                  Card(
+                      child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(context.tr('About your doctor'),
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge),
+                                const SizedBox(height: 12),
+                                Text(context.tr('Qualification: {value}',
+                                    {'value': doctor.qualification})),
+                                const SizedBox(height: 8),
+                                Text(context.tr('Phone: {value}',
+                                    {'value': doctor.phoneNumber})),
+                                const SizedBox(height: 20),
+                                Wrap(spacing: 12, runSpacing: 12, children: [
+                                  OutlinedButton.icon(
+                                      onPressed: () => Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                              builder: (_) => ChatScreen(
+                                                  doctorId: doctor.uid,
+                                                  doctorName:
+                                                      '${doctor.firstName} ${doctor.lastName}',
+                                                  patientId: FirebaseAuth
+                                                      .instance
+                                                      .currentUser!
+                                                      .uid))),
+                                      icon:
+                                          const Icon(Icons.chat_bubble_outline),
+                                      label: Text(context.tr('Message'))),
+                                  OutlinedButton.icon(
+                                      onPressed: doctor.phoneNumber.isEmpty
+                                          ? null
+                                          : () => _open(Uri(
+                                              scheme: 'tel',
+                                              path: doctor.phoneNumber)),
+                                      icon: const Icon(Icons.call_outlined),
+                                      label: Text(context.tr('Call'))),
+                                  OutlinedButton.icon(
+                                      onPressed: hasLocation
+                                          ? () => _open(Uri.https(
+                                                  'www.google.com',
+                                                  '/maps/search/', {
+                                                'api': '1',
+                                                'query':
+                                                    '${doctor.latitude},${doctor.longitude}'
+                                              }))
+                                          : null,
+                                      icon: const Icon(
+                                          Icons.location_on_outlined),
+                                      label: Text(context.tr('Directions'))),
+                                ]),
+                                if (!hasLocation)
+                                  Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Text(context.tr(
+                                          'This doctor has not shared a location.'))),
+                              ]))),
+                  const SizedBox(height: 16),
+                  Card(
+                      child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Form(
+                              key: _formKey,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(context.tr('Request an appointment'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge),
+                                    const SizedBox(height: 8),
+                                    Text(context.tr(
+                                        'Choose a preferred time. Your doctor will confirm the request.')),
+                                    const SizedBox(height: 24),
+                                    Wrap(
+                                        spacing: 12,
+                                        runSpacing: 12,
+                                        children: [
+                                          OutlinedButton.icon(
+                                              onPressed:
+                                                  _saving ? null : _selectDate,
+                                              icon: const Icon(Icons
+                                                  .calendar_today_outlined),
+                                              label: Text(_date == null
+                                                  ? context.tr('Choose date')
+                                                  : DateFormat.yMMMd(
+                                                          Localizations
+                                                                  .localeOf(
+                                                                      context)
+                                                              .languageCode)
+                                                      .format(_date!))),
+                                          OutlinedButton.icon(
+                                              onPressed:
+                                                  _saving ? null : _selectTime,
+                                              icon: const Icon(Icons.schedule),
+                                              label: Text(_time == null
+                                                  ? context.tr('Choose time')
+                                                  : _time!.format(context))),
+                                        ]),
+                                    const SizedBox(height: 20),
+                                    TextFormField(
+                                        controller: _description,
+                                        enabled: !_saving,
+                                        minLines: 3,
+                                        maxLines: 6,
+                                        decoration: InputDecoration(
+                                            labelText: context
+                                                .tr('Reason for your visit'),
+                                            alignLabelWithHint: true),
+                                        validator: (value) => value == null ||
+                                                value.trim().isEmpty
+                                            ? context.tr(
+                                                'Tell the doctor how they can help.')
+                                            : null),
+                                    if (_error != null)
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 16),
+                                          child: Semantics(
+                                              liveRegion: true,
+                                              child: Text(context.tr(_error!),
+                                                  style: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .error)))),
+                                    const SizedBox(height: 24),
+                                    ElevatedButton(
+                                        onPressed: _saving ? null : _book,
+                                        child: Text(_saving
+                                            ? context.tr('Sending request...')
+                                            : context
+                                                .tr('Request appointment'))),
+                                  ])))),
+                ])),
+      )),
     );
-  }
-
-  //select Date
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  //select time
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
-  }
-
-  // open map
-  void _openMap() async {
-    final String googleMapUrl =
-        'https://www.google.com/maps/search/?api=1&query=${widget.doctor.latitude},${widget.doctor.longitude}';
-    if (await canLaunch(googleMapUrl)) {
-      await launch(googleMapUrl);
-    } else {
-      throw 'Could not open the map';
-    }
-  }
-
-  // phone call
-  void _makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunch(phoneUri.toString())) {
-      await launch(phoneUri.toString());
-    } else {
-      throw 'Could not make a call on $phoneNumber this number';
-    }
-  }
-
-  // appointment
-
-  void _bookAppointment() {
-    if (_selectedDate != null &&
-        _selectedTime != null &&
-        _descriptionController.text.isNotEmpty) {
-      // date, time, des, requestId, receiverId, senderId, status
-      String date = DateFormat('MM/dd/yyyy').format(_selectedDate!);
-      String time = _selectedTime!.format(context);
-      String description = _descriptionController.text;
-      String requestId = _requestDatabase.push().key!;
-      String currentUserId = _auth.currentUser!.uid;
-      String receiverId = widget.doctor.uid;
-      String status = 'pending';
-
-      //save appointment
-      _requestDatabase.child(requestId).set({
-        'date': date,
-        'time': time,
-        'description': description,
-        'id': requestId,
-        'receiver': receiverId,
-        'sender': currentUserId,
-        'status': status,
-      }).then((_) {
-        setState(() {
-          _selectedDate = null;
-          _selectedTime = null;
-          _descriptionController.clear();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Appointment booked successfully')));
-      }).catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content:
-                Text('Failed to book your appointment, Try Again later!!')));
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Select a date and time also add a description for appointment')));
-    }
   }
 }

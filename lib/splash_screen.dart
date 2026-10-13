@@ -1,89 +1,79 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:practice/auth/login_page.dart';
-import 'package:practice/doctor/doctor_home_page.dart';
-import 'package:practice/patient/patient_home_page.dart';
+import 'auth/login_page.dart';
+import 'doctor/doctor_home_page.dart';
+import 'patient/patient_home_page.dart';
+import 'ui/app_widgets.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
+  bool _failed = false;
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkAuthStatus();
+    });
   }
 
   Future<void> _checkAuthStatus() async {
-    User? user = _auth.currentUser;
-
-    if (user == null) {
-      await Future.delayed(const Duration(seconds: 2));
-      _navigateToLogin();
-    } else {
-      DatabaseReference userRef = _database.child('Doctors').child(user.uid);
-      DataSnapshot snapshot = await userRef.get();
-
-      if (snapshot.exists) {
-        await Future.delayed(const Duration(seconds: 2));
-        _navigateToDoctorHome();
-      } else {
-        userRef = _database.child('Patients').child(user.uid);
-        snapshot = await userRef.get();
-        if (snapshot.exists) {
-          await Future.delayed(const Duration(seconds: 2));
-          _navigateToPatientHome();
+    setState(() => _failed = false);
+    try {
+      final user = await FirebaseAuth.instance.authStateChanges().first;
+      Widget page = const LoginPage();
+      if (user != null) {
+        final database = FirebaseDatabase.instance.ref();
+        final doctor = await database.child('Doctors').child(user.uid).get();
+        if (doctor.exists) {
+          page = const DoctorHomePage();
         } else {
-          await Future.delayed(const Duration(seconds: 2));
-          _navigateToLogin();
+          final patient =
+              await database.child('Patients').child(user.uid).get();
+          if (patient.exists) page = const PatientHomePage();
         }
       }
+      if (mounted) {
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (_) => page));
+      }
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
     }
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const LoginPage()));
-  }
-
-  void _navigateToDoctorHome() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const DoctorHomePage()));
-  }
-
-  void _navigateToPatientHome() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const PatientHomePage()));
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        color: const Color(0xff0064FA),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Image.asset(
-                'assets/images/login_bg.png',
-                width: MediaQuery.of(context).size.width,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(actions: const [LanguageButton()]),
+      body: SafeArea(
+        child: _failed
+            ? AppStatus(
+                icon: Icons.wifi_off_outlined,
+                title: context.tr('Unable to connect'),
+                message: context
+                    .tr('Check your connection to continue to DoctorApp.'),
+                onRetry: _checkAuthStatus)
+            : Center(
+                child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.health_and_safety_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 24),
+                      Text('DoctorApp',
+                          style: Theme.of(context).textTheme.headlineMedium),
+                      const SizedBox(height: 8),
+                      Text(context.tr('Care that fits your life.')),
+                      const SizedBox(height: 32),
+                      CircularProgressIndicator(
+                          semanticsLabel: context.tr('Loading your account')),
+                    ]))),
+      ));
 }

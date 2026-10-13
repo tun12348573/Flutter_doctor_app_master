@@ -1,204 +1,229 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'ui/app_widgets.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? doctorId;
   final String? doctorName;
   final String? patientId;
   final String? patientName;
-
-  const ChatScreen({
-    super.key,
-    this.doctorId,
-    this.doctorName,
-    this.patientId,
-    this.patientName,
-  });
-
+  const ChatScreen(
+      {super.key,
+      this.doctorId,
+      this.doctorName,
+      this.patientId,
+      this.patientName});
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _chatListDatabase =
-      FirebaseDatabase.instance.ref().child('ChatList');
-  final DatabaseReference _chatDatabase =
-      FirebaseDatabase.instance.ref().child('Chat');
-  final TextEditingController _messageController = TextEditingController();
-  String? _currentUserId;
-
-  bool get isDoctor => _currentUserId == widget.doctorId;
+  late final String _uid;
+  late final String _partnerId;
+  late Stream<DatabaseEvent> _messages;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _currentUserId = _auth.currentUser?.uid;
+    _uid = FirebaseAuth.instance.currentUser!.uid;
+    _partnerId = _uid == widget.doctorId ? widget.patientId! : widget.doctorId!;
+    _messages = FirebaseDatabase.instance.ref('Chat').onValue;
   }
 
-  // send message method
-  void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
-      String message = _messageController.text.trim();
-      String chatId = _chatDatabase.push().key!;
-      String timeStamp = DateTime.now().toIso8601String();
-
-      //determine sender and receiver IDs based on the user's role
-      String senderUid;
-      String receiverUid;
-
-      if (isDoctor) {
-        senderUid = _currentUserId!;
-        receiverUid = widget.patientId!;
-      } else {
-        senderUid = _currentUserId!;
-        receiverUid = widget.doctorId!;
-      }
-
-      // save message in Chat database
-      _chatDatabase.child(chatId).set({
+  Future<void> _send(String message) async {
+    final root = FirebaseDatabase.instance.ref();
+    final id = root.child('Chat').push().key!;
+    await root.update({
+      'Chat/$id': {
         'message': message,
-        'receiver': receiverUid,
-        'sender': senderUid,
-        'timestamp': timeStamp,
-      });
+        'receiver': _partnerId,
+        'sender': _uid,
+        'timestamp': DateTime.now().toIso8601String()
+      },
+      'ChatList/$_uid/$_partnerId': {'id': _partnerId},
+      'ChatList/$_partnerId/$_uid': {'id': _uid},
+    });
+  }
 
-      //update chatList
-      _chatListDatabase.child(senderUid).child(receiverUid).set({
-        'id': receiverUid,
-      });
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+            title: Text((_uid == widget.doctorId
+                    ? widget.patientName
+                    : widget.doctorName) ??
+                context.tr('Conversation')),
+            actions: const [LanguageButton()]),
+        body: SafeArea(
+            child: ContentWidth(
+                maxWidth: 880,
+                child: Column(children: [
+                  Expanded(
+                      child: StreamBuilder<DatabaseEvent>(
+                          stream: _messages,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return AppStatus(
+                                  icon: Icons.wifi_off_outlined,
+                                  title: context.tr('Unable to load messages'),
+                                  message: context.tr(
+                                      'Check your connection and try again.'),
+                                  onRetry: () => setState(() => _messages =
+                                      FirebaseDatabase.instance
+                                          .ref('Chat')
+                                          .onValue));
+                            }
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            final messages = <Map>[];
+                            for (final item
+                                in snapshot.data?.snapshot.children ??
+                                    <DataSnapshot>[]) {
+                              final value = item.value;
+                              if (value is Map &&
+                                  ((value['sender'] == _uid &&
+                                          value['receiver'] == _partnerId) ||
+                                      (value['sender'] == _partnerId &&
+                                          value['receiver'] == _uid))) {
+                                messages.add(value);
+                              }
+                            }
+                            messages.sort((a, b) => b['timestamp']
+                                .toString()
+                                .compareTo(a['timestamp'].toString()));
+                            if (messages.isEmpty) {
+                              return AppStatus(
+                                  icon: Icons.chat_bubble_outline,
+                                  title: context.tr('Start a conversation'),
+                                  message: context.tr(
+                                      'Send a message to introduce yourself.'));
+                            }
+                            return ListView.builder(
+                                reverse: true,
+                                padding: const EdgeInsets.all(20),
+                                itemCount: messages.length,
+                                itemBuilder: (context, i) {
+                                  final mine = messages[i]['sender'] == _uid;
+                                  return Align(
+                                      alignment: mine
+                                          ? Alignment.centerRight
+                                          : Alignment.centerLeft,
+                                      child: FractionallySizedBox(
+                                          widthFactor: .85,
+                                          child: Align(
+                                            alignment: mine
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                            child: Container(
+                                              margin: const EdgeInsets.only(
+                                                  bottom: 12),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 12),
+                                              decoration: BoxDecoration(
+                                                  color: mine
+                                                      ? Theme.of(context)
+                                                          .colorScheme
+                                                          .primaryContainer
+                                                      : Theme.of(context)
+                                                          .colorScheme
+                                                          .surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          16)),
+                                              child: Text(
+                                                  messages[i]['message']
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                      color: mine
+                                                          ? Theme.of(context)
+                                                              .colorScheme
+                                                              .onPrimaryContainer
+                                                          : Theme.of(context)
+                                                              .colorScheme
+                                                              .onSurface)),
+                                            ),
+                                          )));
+                                });
+                          })),
+                  MessageComposer(onSend: _send),
+                ]))),
+      );
+}
 
-      _chatListDatabase.child(receiverUid).child(senderUid).set({
-        'id': senderUid,
-      });
+class MessageComposer extends StatefulWidget {
+  const MessageComposer({super.key, required this.onSend});
+  final Future<void> Function(String) onSend;
+  @override
+  State<MessageComposer> createState() => _MessageComposerState();
+}
 
-      //clear the message input
-      _messageController.clear();
+class _MessageComposerState extends State<MessageComposer> {
+  final _controller = TextEditingController();
+  bool _sending = false;
+  String? _error;
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _controller.text.trim();
+    if (_sending || text.isEmpty) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      await widget.onSend(text);
+      if (mounted) _controller.clear();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Message not sent. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    String? chatPartnerName = isDoctor ? widget.patientName : widget.doctorName;
-
-    return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            '$chatPartnerName',
-            style: GoogleFonts.poppins(fontSize: 18),
-          ),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-                child: StreamBuilder(
-                    stream: _chatDatabase.onValue,
-                    builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-                      if (!snapshot.hasData ||
-                          snapshot.data?.snapshot.value == null) {
-                        return const Center(child: Text('No message yet.'));
-                      }
-                      Map<dynamic, dynamic> messagesMap = snapshot
-                          .data!.snapshot.value as Map<dynamic, dynamic>;
-                      List<Map<String, dynamic>> messagesList = [];
-
-                      messagesMap.forEach((key, value) {
-                        if ((value['sender'] == _currentUserId &&
-                                value['receiver'] == widget.doctorId) ||
-                            (value['sender'] == widget.doctorId &&
-                                value['receiver'] == _currentUserId) ||
-                            (value['sender'] == _currentUserId &&
-                                value['receiver'] == widget.patientId) ||
-                            (value['sender'] == widget.patientId &&
-                                value['receiver'] == _currentUserId)) {
-                          messagesList.add({
-                            'message': value['message'],
-                            'sender': value['sender'],
-                            'timestamp': value['timestamp'],
-                          });
-                        }
-                      });
-                      messagesList.sort(
-                          (a, b) => a['timestamp'].compareTo(b['timestamp']));
-
-                      return ListView.builder(
-                          itemCount: messagesList.length,
-                          itemBuilder: (context, index) {
-                            bool isMe =
-                                messagesList[index]['sender'] == _currentUserId;
-                            return Align(
-                              alignment: isMe
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 16),
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 4, horizontal: 8),
-                                decoration: BoxDecoration(
-                                  color: isMe
-                                      ? const Color(0xffC8C4FF)
-                                      : const Color(0xffE3E3E3),
-                                  borderRadius: isMe
-                                      ? const BorderRadius.only(
-                                          topLeft: Radius.circular(10),
-                                          topRight: Radius.circular(10),
-                                          bottomLeft: Radius.circular(10),
-                                          bottomRight: Radius.zero)
-                                      : const BorderRadius.only(
-                                          topLeft: Radius.circular(10),
-                                          topRight: Radius.circular(10),
-                                          bottomLeft: Radius.zero,
-                                          bottomRight: Radius.circular(10)),
-                                ),
-                                child: Text(messagesList[index]['message']),
-                              ),
-                            );
-                          });
-                    })),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (_error != null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 45,
-                      child: TextField(
-                        keyboardType: TextInputType.multiline,
-                        style: GoogleFonts.poppins(
-                            fontSize: 14, fontWeight: FontWeight.normal),
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xffF0EFFF),
-                            hintText: 'Enter your message..',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xffC8C4FF)))),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                      onPressed: _sendMessage,
-                      icon: const Icon(
-                        Icons.send,
-                        size: 30,
-                        color: Color(0xff0064FA),
-                      ))
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Semantics(
+                    liveRegion: true,
+                    child: Text(context.tr(_error!),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)))),
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Expanded(
+                child: TextField(
+                    controller: _controller,
+                    enabled: !_sending,
+                    minLines: 1,
+                    maxLines: 5,
+                    keyboardType: TextInputType.multiline,
+                    decoration: InputDecoration(
+                        labelText: context.tr('Message'),
+                        hintText: context.tr('Write your message...')))),
+            const SizedBox(width: 8),
+            IconButton.filled(
+                tooltip: _sending
+                    ? context.tr('Sending message')
+                    : context.tr('Send message'),
+                onPressed: _sending ? null : _send,
+                icon:
+                    Icon(_sending ? Icons.hourglass_top : Icons.send_outlined)),
+          ]),
+        ]),
+      );
 }

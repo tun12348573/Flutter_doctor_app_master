@@ -1,301 +1,150 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:practice/auth/signup_screen.dart';
-import 'package:practice/doctor/doctor_home_page.dart';
-import 'package:practice/patient/patient_home_page.dart';
+import '../doctor/doctor_home_page.dart';
+import '../patient/patient_home_page.dart';
+import '../ui/app_widgets.dart';
+import 'signup_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
   bool _isLoading = false;
-  bool _isNavigation = false;
   bool _obscureText = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: Scaffold(
-        body: _isLoading
-            ? const CircularProgressIndicator()
-            : Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SingleChildScrollView(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                            height: 48,
-                          ),
-                          Image.asset('assets/images/plus.png'),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            'Welcome!',
-                            style: GoogleFonts.poppins(
-                                fontSize: 32, fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            'Login first',
-                            style: GoogleFonts.poppins(
-                                fontSize: 24, fontWeight: FontWeight.w400),
-                          ),
-                          const SizedBox(
-                            height: 60,
-                          ),
-                          SizedBox(
-                            height: 44,
-                            child: TextFormField(
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13, fontWeight: FontWeight.w500),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xffF0EFFF),
-                                contentPadding:
-                                    const EdgeInsets.only(left: 10, right: 10),
-                                labelText: 'Email',
-                                labelStyle: GoogleFonts.poppins(
-                                    fontSize: 13, color: Colors.grey.shade400),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      10.0), // Rounded corners
-                                  borderSide: const BorderSide(
-                                    color:
-                                        Color(0xff0064FA), // Blue border color
-                                    width: 1.0, // Border width
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  borderSide: const BorderSide(
-                                    color: Color(
-                                        0xff0064FA), // Blue border color when focused
-                                    width: 1.0, // Border width
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  borderSide: const BorderSide(
-                                    color: Color(
-                                        0xff0064FA), // Blue border color when not focused
-                                    width: 1.0, // Border width
-                                  ),
-                                ),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              onChanged: (val) => email = val,
-                              validator: (val) =>
-                                  val!.isEmpty ? 'Enter an email' : null,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          SizedBox(
-                            height: 44,
-                            child: TextFormField(
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13, fontWeight: FontWeight.w500),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xffF0EFFF),
-                                contentPadding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                labelText: 'Password',
-                                labelStyle: GoogleFonts.poppins(
-                                    fontSize: 13, color: Colors.grey.shade400),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xff0064FA),
-                                    width: 1.0,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xff0064FA),
-                                    width: 1.0,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xff0064FA),
-                                    width: 1.0,
-                                  ),
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscureText
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureText = !_obscureText;
-                                    });
-                                  },
-                                ),
-                              ),
-                              obscureText: _obscureText,
-                              keyboardType: TextInputType.text,
-                              onChanged: (val) => password = val,
-                              validator: (val) => val!.length < 6
-                                  ? 'Password must be at least 6 characters'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            child: ElevatedButton(
-                              onPressed: _login,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(
-                                    0xff0064FA), // Blue background color
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      10.0), // Rounded corners
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical:
-                                        12), // Optional: Padding inside the button
-                              ),
-                              child: Text(
-                                'Login',
-                                style: GoogleFonts.poppins(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.4), // Text color
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegisterPage()));
-                              },
-                              child: Text(
-                                'Don’t have an account? Register',
-                                style: GoogleFonts.poppins(
-                                    fontSize: 15, fontWeight: FontWeight.w400),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
+  String? _error;
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        User? user = userCredential.user;
-
-        if (user != null) {
-          DatabaseReference userRef =
-              _database.child('Doctors').child(user.uid);
-          DataSnapshot snapshot = await userRef.get();
-
-          if (snapshot.exists) {
-            _navigateToDoctorHome();
-          } else {
-            userRef = _database.child('Patients').child(user.uid);
-            snapshot = await userRef.get();
-            if (snapshot.exists) {
-              _navigateToPatientHome();
-            } else {
-              _showErrorDialog('User not found');
-            }
-          }
-        }
-      } catch (e) {
-        _showErrorDialog(e.toString());
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+    if (_isLoading || !_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email.trim(), password: password);
+      final uid = credential.user!.uid;
+      final database = FirebaseDatabase.instance.ref();
+      final doctor = await database.child('Doctors').child(uid).get();
+      final patient = doctor.exists
+          ? null
+          : await database.child('Patients').child(uid).get();
+      if (!mounted) return;
+      if (!doctor.exists && patient?.exists != true) {
+        setState(() => _error =
+            'Your profile could not be found. Please contact the demo administrator.');
+        return;
       }
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+              builder: (_) => doctor.exists
+                  ? const DoctorHomePage()
+                  : const PatientHomePage()),
+          (_) => false);
+    } on FirebaseAuthException {
+      if (mounted) {
+        setState(() => _error =
+            'Unable to sign in. Check your email, password and connection.');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+            () => _error = 'Unable to load your profile. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _navigateToDoctorHome() {
-    if (!_isNavigation) {
-      _isNavigation = true;
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const DoctorHomePage()));
-    }
-  }
-
-  void _navigateToPatientHome() {
-    if (!_isNavigation) {
-      _isNavigation = true;
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const PatientHomePage()));
-    }
-  }
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(actions: const [LanguageButton()]),
+        body: AuthLayout(
+            title: context.tr('Welcome back'),
+            subtitle: context.tr('Your next step to better care starts here.'),
+            child: AutofillGroup(
+                child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(context.tr('Sign in to your account'),
+                              style: Theme.of(context).textTheme.titleLarge),
+                          const SizedBox(height: 24),
+                          TextFormField(
+                              enabled: !_isLoading,
+                              decoration: InputDecoration(
+                                  labelText: context.tr('Email'),
+                                  prefixIcon: const Icon(Icons.mail_outline)),
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              autofillHints: const [AutofillHints.email],
+                              autocorrect: false,
+                              onChanged: (value) => email = value,
+                              validator: (value) => value == null ||
+                                      !value.trim().contains('@')
+                                  ? context.tr('Enter a valid email address.')
+                                  : null),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                              enabled: !_isLoading,
+                              decoration: InputDecoration(
+                                  labelText: context.tr('Password'),
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                      tooltip: _obscureText
+                                          ? context.tr('Show password')
+                                          : context.tr('Hide password'),
+                                      onPressed: () => setState(
+                                          () => _obscureText = !_obscureText),
+                                      icon: Icon(_obscureText
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined))),
+                              obscureText: _obscureText,
+                              enableSuggestions: false,
+                              autocorrect: false,
+                              autofillHints: const [AutofillHints.password],
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _login(),
+                              onChanged: (value) => password = value,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? context.tr('Enter your password.')
+                                      : null),
+                          if (_error != null)
+                            Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Semantics(
+                                    liveRegion: true,
+                                    child: Text(context.tr(_error!),
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error)))),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              child: Text(_isLoading
+                                  ? context.tr('Signing in...')
+                                  : context.tr('Sign in'))),
+                          const SizedBox(height: 12),
+                          TextButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const RegisterPage())),
+                              child: Text(
+                                  context.tr('New here? Create an account'))),
+                        ])))),
+      );
 }

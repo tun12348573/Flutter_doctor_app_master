@@ -1,69 +1,62 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:practice/doctor/model/doctor.dart';
+import '../model/doctor.dart';
 
 class DoctorCard extends StatelessWidget {
+  const DoctorCard({super.key, required this.doctor, this.onTap});
   final Doctor doctor;
-
-  const DoctorCard({super.key, required this.doctor});
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(0),
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      decoration: BoxDecoration(
-        color: const Color(0xffF0EFFF),
-        border: Border.all(color: const Color(0xffC8C4FF)),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Card(
-        color: const Color(0xffF0EFFF),
-        elevation: 0.0,
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-        child: ListTile(
-          leading: Container(
-            width: 55,
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(60),
-              border: Border.all(color: const Color(0xff0064FA)),
-            ),
-            child: CircleAvatar(
-              backgroundImage: NetworkImage(doctor.profileImageUrl),
-            ),
-          ),
-          title: Text(
-            '${doctor.firstName} ${doctor.lastName}',
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    '${doctor.category} - ${doctor.city}',
-                    style: GoogleFonts.poppins(fontSize: 13),
-                  )
-                ],
-              ),
-              Text(
-                'Experience: ${doctor.yearsOfExperience} years',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12,
-                  color: const Color(0xffFA9600),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child:
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                CircleAvatar(
+                    radius: 28,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    child: doctor.profileImageUrl.isEmpty
+                        ? const Icon(Icons.person_outline, size: 30)
+                        : ClipOval(
+                            child: Image.network(doctor.profileImageUrl,
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.person_outline)))),
+                const SizedBox(width: 16),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text('${doctor.firstName} ${doctor.lastName}',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text(context.tr(doctor.category),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Text(doctor.city),
+                      Text(
+                          context.tr('{years} years of experience',
+                              {'years': doctor.yearsOfExperience}),
+                          style: Theme.of(context).textTheme.bodySmall),
+                      if (onTap != null)
+                        Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(context.tr('View profile'),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary))),
+                    ])),
+              ]),
+            )),
+      );
 }

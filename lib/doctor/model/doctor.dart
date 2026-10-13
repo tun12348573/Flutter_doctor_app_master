@@ -43,8 +43,8 @@ class Doctor {
       qualification: map['qualification'],
       phoneNumber: map['phoneNumber'],
       yearsOfExperience: map['yearsOfExperience'],
-      latitude: map['latitude'],
-      longitude: map['longitude'],
+      latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
       numberOfReviews: map['numberOfReviews'],
       totalReviews: map['totalReviews'],
     );

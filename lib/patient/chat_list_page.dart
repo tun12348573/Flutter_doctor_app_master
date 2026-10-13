@@ -1,119 +1,100 @@
+import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:practice/chat_screen.dart';
-
+import '../chat_screen.dart';
+import '../ui/app_widgets.dart';
 import '../doctor/model/doctor.dart';
 
 class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
-
   @override
   State<ChatListPage> createState() => _ChatListPageState();
 }
 
 class _ChatListPageState extends State<ChatListPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _chatListDatabase =
-      FirebaseDatabase.instance.ref().child('ChatList');
-  final DatabaseReference _doctorDatabase =
-      FirebaseDatabase.instance.ref().child('Doctors');
-  List<Doctor> _chatList = [];
-  bool _isLoading = true;
-
+  List<Doctor> _partners = [];
+  bool _loading = true;
+  bool _failed = false;
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _fetchChatList();
+    _load();
   }
 
-  Future<void> _fetchChatList() async {
-    String? userId = _auth.currentUser?.uid;
-    if (userId != null) {
-      try {
-        final DatabaseEvent event = await _chatListDatabase.once();
-        DataSnapshot snapshot = event.snapshot;
-        List<Doctor> tempChatList = [];
-
-        if (snapshot.value != null) {
-          Map<dynamic, dynamic> values =
-              snapshot.value as Map<dynamic, dynamic>;
-          for (var doctorId in values.keys) {
-            Map<dynamic, dynamic> userChats = values[doctorId];
-            if (userChats.containsKey(userId)) {
-              final DatabaseEvent doctorEvent =
-                  await _doctorDatabase.child(doctorId).once();
-              DataSnapshot doctorSnapshot = doctorEvent.snapshot;
-              if (doctorSnapshot.value != null) {
-                Doctor doctor = Doctor.fromMap(
-                    doctorSnapshot.value as Map<dynamic, dynamic>, doctorId);
-                tempChatList.add(doctor);
-              }
-            }
-          }
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw StateError('Not signed in');
+      final database = FirebaseDatabase.instance;
+      final chats = await database.ref('ChatList').child(uid).get();
+      final partners = <Doctor>[];
+      for (final chat in chats.children) {
+        final profile = await database.ref('Doctors').child(chat.key!).get();
+        if (profile.value is Map) {
+          partners.add(Doctor.fromMap(profile.value as Map, profile.key!));
         }
-        setState(() {
-          _chatList = tempChatList;
-          _isLoading = false;
-        });
-      } catch (error) {
-        // error message
       }
+      if (mounted) setState(() => _partners = partners);
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat with'),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _chatList.isEmpty
-              ? const Center(child: Text('No chats available'))
-              : ListView.builder(
-                  itemCount: _chatList.length,
-                  itemBuilder: (context, index) {
-                    Doctor doctor = _chatList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                                  doctorId: doctor.uid,
-                                  doctorName:
-                                      '${doctor.firstName} ${doctor.lastName}',
-                                  patientId: _auth.currentUser!.uid,
-                                )));
-                      },
-                      child: Container(
-                          height: 48,
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 16),
-                          decoration: BoxDecoration(
-                              color: const Color(0xffF0EFFF),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xffC8C4FF),
-                              )),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 16.0, right: 10.0),
-                                child: Text(
-                                  '${doctor.firstName} ${doctor.lastName}',
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                            ],
-                          )),
-                    );
-                  }),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(context.tr('Messages')), actions: [
+          const LanguageButton(),
+          IconButton(
+              tooltip: context.tr('Refresh conversations'),
+              onPressed: _loading ? null : _load,
+              icon: const Icon(Icons.refresh)),
+        ]),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _failed
+                ? AppStatus(
+                    icon: Icons.wifi_off_outlined,
+                    title: context.tr('Unable to load messages'),
+                    message: context.tr('Check your connection and try again.'),
+                    onRetry: _load)
+                : _partners.isEmpty
+                    ? AppStatus(
+                        icon: Icons.chat_bubble_outline,
+                        title: context.tr('No conversations yet'),
+                        message: context.tr(
+                            'Open a doctor profile to start a conversation.'))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(24),
+                        itemCount: _partners.length,
+                        itemBuilder: (context, i) {
+                          final partner = _partners[i];
+                          return Card(
+                              child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            leading: const CircleAvatar(
+                                child: Icon(Icons.person_outline)),
+                            title: Text(
+                                '${partner.firstName} ${partner.lastName}'),
+                            subtitle: Text(context.tr('Open conversation')),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (_) => ChatScreen(
+                                          patientId: FirebaseAuth
+                                              .instance.currentUser!.uid,
+                                          doctorId: partner.uid,
+                                          doctorName:
+                                              '${partner.firstName} ${partner.lastName}',
+                                        ))),
+                          ));
+                        }),
+      );
 }

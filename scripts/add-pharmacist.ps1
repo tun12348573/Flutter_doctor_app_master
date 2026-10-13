@@ -12,7 +12,13 @@ $target = @('--project', 'doctor-app-df8ca', '--instance', 'doctor-app-df8ca-def
 if ($Remove) {
   firebase database:remove "/Pharmacists/$Uid" @target
 } else {
-  $data = @{ email = $Email } | ConvertTo-Json -Compress
-  firebase database:set "/Pharmacists/$Uid" --data $data @target
+  # Windows PowerShell strips the JSON quotes from --data, so pass a file instead.
+  $file = New-TemporaryFile
+  try {
+    @{ email = $Email } | ConvertTo-Json -Compress | Set-Content -LiteralPath $file -Encoding ascii
+    firebase database:set "/Pharmacists/$Uid" $file.FullName @target
+  } finally {
+    Remove-Item -LiteralPath $file
+  }
 }
 exit $LASTEXITCODE

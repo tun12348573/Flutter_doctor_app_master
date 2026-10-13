@@ -18,6 +18,9 @@ Bug fixes and refactors with no visible change do not need a README update.
 flutter analyze
 flutter test
 node n8n/test-workflow.cjs
+cd test/rules; npm test   # security rules on the emulator (needs Java)
 ```
+
+`database.rules.json` is the source of truth for Realtime Database rules; `firebase deploy --only database` overwrites the console. Any new database path needs rules plus a test in `test/rules/rules.test.js`.
 
 New UI strings go through `context.tr()` and need a Vietnamese entry in `lib/l10n/app_strings.dart`.

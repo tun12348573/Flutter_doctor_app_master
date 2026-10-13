@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'auth/login_page.dart';
 import 'doctor/model/booking.dart';
+import 'pharmacy/my_orders_section.dart';
 import 'ui/app_widgets.dart';
 import 'ui/booking_card.dart';
 
@@ -117,6 +118,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     .tr('Find a doctor and request your first appointment.'))
           else
             ..._bookings.map((booking) => BookingCard(booking: booking)),
+          const SizedBox(height: 24),
+          const MyOrdersSection(),
         ]),
       );
 }

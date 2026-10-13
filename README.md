@@ -2,10 +2,16 @@
 
 **Tiếng Việt** · [English](README.en.md)
 
-DoctorApp là ứng dụng đặt lịch khám, kết nối **bệnh nhân** với **bác sĩ**. Bệnh nhân tìm bác sĩ theo chuyên khoa, gửi yêu cầu đặt lịch, nhắn tin với bác sĩ và hỏi trợ lý AI các câu hỏi sức khỏe chung. Bác sĩ duyệt lịch hẹn và trả lời tin nhắn. Giao diện có hai ngôn ngữ Anh và Việt.
+DoctorApp là ứng dụng đặt lịch khám và mua thuốc, kết nối **bệnh nhân**, **bác sĩ** và **nhà thuốc**. Bệnh nhân có thể:
+- Tìm bác sĩ theo chuyên khoa, gửi yêu cầu đặt lịch, nhắn tin với bác sĩ.
+- Tra cứu thuốc và đặt mua thuốc không kê đơn (trả tiền khi nhận hàng).
+- Hỏi trợ lý AI các câu hỏi sức khỏe chung và về thuốc.
+
+Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý kho. Giao diện có hai ngôn ngữ Anh và Việt.
 
 - Bản web: https://doctor-app-df8ca.web.app
 - Trợ lý AI chỉ hoạt động khi máy chủ AI đang bật (xem [Trợ lý AI](#trợ-lý-ai)).
+- Dữ liệu thuốc là **dữ liệu minh họa**. Hãy đọc kỹ hướng dẫn sử dụng và hỏi dược sĩ trước khi dùng thuốc.
 
 ## Hướng dẫn sử dụng
 
@@ -13,16 +19,18 @@ DoctorApp là ứng dụng đặt lịch khám, kết nối **bệnh nhân** v�
 
 - **Đổi ngôn ngữ:** bấm nút **EN / VI** ở góc màn hình.
 - **Đăng ký:** chọn vai trò *Bệnh nhân* hoặc *Bác sĩ*, rồi nhập họ tên, email, mật khẩu (tối thiểu 6 ký tự), số điện thoại và thành phố. Có thể bấm **Dùng vị trí hiện tại** để lưu tọa độ. Bác sĩ phải nhập thêm chuyên khoa, bằng cấp và số năm kinh nghiệm.
-- **Đăng nhập / đăng xuất:** đăng nhập bằng email và mật khẩu. Nút **Đăng xuất** nằm ở tab *Tài khoản*.
+- Tài khoản **nhà thuốc** không tự đăng ký được, do quản trị viên cấp (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc)).
+- **Đăng nhập / đăng xuất:** đăng nhập bằng email và mật khẩu, app tự chuyển đến giao diện theo vai trò. Nút **Đăng xuất** nằm ở tab *Tài khoản*.
 
 ### Bệnh nhân
 
 | Tab | Chức năng |
 |---|---|
 | **Tìm bác sĩ** | Lọc bác sĩ theo chuyên khoa (Nha khoa, Tim mạch, Ung bướu, Ngoại khoa) và bấm vào một bác sĩ để xem hồ sơ. |
+| **Nhà thuốc** | Tìm thuốc, xem chi tiết, thêm vào giỏ và đặt hàng. |
 | **Tin nhắn** | Danh sách các cuộc trò chuyện với bác sĩ. |
 | **Trợ lý AI** | Hỏi đáp sức khỏe chung với AI. |
-| **Tài khoản** | Xem các lịch hẹn và trạng thái của chúng, đăng xuất. |
+| **Tài khoản** | Xem lịch hẹn và **đơn thuốc** kèm trạng thái, hủy đơn, đăng xuất. |
 
 **Đặt lịch khám:** vào *Tìm bác sĩ*, chọn bác sĩ, chọn ngày, giờ, ghi lý do khám rồi bấm **Gửi yêu cầu đặt lịch**. Lịch hẹn có trạng thái *Chờ xác nhận* cho đến khi bác sĩ xử lý. Theo dõi trạng thái ở *Tài khoản*.
 
@@ -31,12 +39,21 @@ Trong hồ sơ bác sĩ còn có các nút:
 - **Chỉ đường:** mở Google Maps.
 - **Tin nhắn:** mở cuộc trò chuyện với bác sĩ.
 
+**Mua thuốc:**
+1. Vào tab *Nhà thuốc*. Gõ tên thuốc hoặc hoạt chất vào ô tìm kiếm, hoặc lọc theo nhóm (Giảm đau, hạ sốt; Ho, cảm; Tiêu hóa; Vitamin, khoáng chất; Dị ứng; Da liễu; Mắt, tai, mũi; Kháng sinh; Tim mạch, huyết áp; Đái tháo đường).
+2. Bấm vào một thuốc để xem **hoạt chất, dạng bào chế, công dụng, cách dùng, chống chỉ định, tác dụng phụ** và giá.
+3. Bấm **Thêm vào giỏ**. Thuốc có nhãn *Hết hàng* thì không mua được.
+   - Thuốc có nhãn **Thuốc kê đơn** chỉ cho xem thông tin. Thay cho nút mua là nút **Đặt lịch khám**.
+4. Bấm biểu tượng giỏ hàng ở góc trên để sửa số lượng (không vượt quá số còn trong kho). Điền họ tên, số điện thoại (điền sẵn từ hồ sơ), địa chỉ giao hàng, ghi chú, rồi bấm **Đặt hàng (trả khi nhận hàng)**.
+5. Theo dõi đơn ở *Tài khoản → Đơn thuốc của bạn*. Các trạng thái lần lượt là *Chờ xác nhận → Đang giao → Đã giao*, hoặc *Đã hủy*. Bấm **Hủy đơn** được khi đơn còn *Chờ xác nhận*.
+
 **Trợ lý AI:**
 - Nhập câu hỏi (tối đa 2.000 ký tự) rồi bấm gửi. Mỗi câu trả lời mất khoảng 10–60 giây.
 - Mỗi tài khoản được hỏi **tối đa 20 câu mỗi giờ**.
+- **Hỏi về một thuốc:** trong trang chi tiết thuốc, bấm **Hỏi AI về thuốc này**. AI trả lời dựa trên thông tin của thuốc đó trong danh mục. Nhãn *Đang hỏi về: …* hiện phía trên ô nhập. Bấm dấu × trên nhãn để quay lại hỏi chung.
 - Cuộc trò chuyện **không được lưu**: đăng xuất hoặc tải lại trang là mất.
 - Ngôn ngữ của câu trả lời theo nút EN/VI.
-- AI có thể trả lời sai. AI không chẩn đoán, không kê đơn. Khi gặp tình huống khẩn cấp, hãy gọi cấp cứu.
+- AI có thể trả lời sai. AI không chẩn đoán, không kê đơn, và không đưa liều dùng cho thuốc kê đơn. Khi gặp tình huống khẩn cấp, hãy gọi cấp cứu.
 
 ### Bác sĩ
 
@@ -46,6 +63,26 @@ Trong hồ sơ bác sĩ còn có các nút:
 | **Tin nhắn** | Trả lời tin nhắn của bệnh nhân. |
 | **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), đăng xuất. |
 
+### Nhà thuốc
+
+| Tab | Chức năng |
+|---|---|
+| **Đơn hàng** | Lọc đơn theo trạng thái. Mỗi đơn hiển thị thuốc, tổng tiền, tên, số điện thoại, địa chỉ và ghi chú của khách. |
+| **Kho** | Danh sách thuốc kèm số tồn, sắp xếp theo số tồn tăng dần. Tìm kiếm, lọc **Sắp hết** (tồn ≤ 10), nhập kho, chỉnh tồn, thêm và sửa thuốc. |
+| **Tài khoản** | Email tài khoản, đăng xuất. |
+
+**Xử lý đơn:**
+- **Xác nhận và giao hàng:** app trừ kho từng thuốc trong đơn, rồi chuyển đơn sang *Đang giao*. Nếu một thuốc không đủ hàng, app báo *Không đủ hàng cho …*, giữ nguyên kho và đơn vẫn ở trạng thái *Chờ xác nhận*.
+- **Đã giao xong:** chuyển đơn sang *Đã giao*.
+- **Hủy đơn:** chuyển đơn sang *Đã hủy*. Nếu đơn đã được xác nhận thì số thuốc được **trả lại kho**.
+
+**Kho:**
+- Bấm ⋮ ở một thuốc để chọn:
+  - **Nhập kho:** cộng thêm số lượng vừa nhận.
+  - **Chỉnh tồn kho:** đặt lại đúng số tồn thực tế.
+- Bấm vào một thuốc để sửa thông tin. Số tồn không sửa ở đây.
+- Nút **Thêm thuốc** để thêm thuốc mới, nhập tồn kho ban đầu và đánh dấu *Thuốc kê đơn* nếu cần.
+
 ## Dành cho dev
 
 ### Công nghệ
@@ -53,9 +90,10 @@ Trong hồ sơ bác sĩ còn có các nút:
 | Lớp | Công nghệ |
 |---|---|
 | App | Flutter 3.38 / Dart ≥3.4, Material, `google_fonts`, `flutter_localizations` + `intl` |
-| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database, Storage, Hosting |
+| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Storage, Hosting |
 | Thiết bị | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
 | Trợ lý AI | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, mở ra internet bằng Tailscale Funnel |
+| Test rules | Firebase Database Emulator (cần Java) + `@firebase/rules-unit-testing` |
 
 Hiện chỉ **web** được cấu hình trong [lib/firebase_options.dart](lib/firebase_options.dart). Muốn chạy Android/iOS thì phải chạy `flutterfire configure` trước.
 
@@ -65,23 +103,40 @@ Hiện chỉ **web** được cấu hình trong [lib/firebase_options.dart](lib/
 lib/
   main.dart            Khởi tạo Firebase, theme, ngôn ngữ
   splash_screen.dart   Kiểm tra đăng nhập, chuyển đến màn hình chính theo vai trò
-  auth/                Đăng nhập, đăng ký
+  auth/                Đăng nhập, đăng ký, role_home.dart (Doctors → Pharmacists → Patients)
   patient/             Màn hình chính và danh sách chat của bệnh nhân
   doctor/              Danh sách và hồ sơ bác sĩ, lịch hẹn, model (Doctor, Patient, Booking)
-  ai/                  Trợ lý AI: AiChatSession (gọi webhook), AiChatPage
+  pharmacy/            Nhà thuốc cho bệnh nhân: danh mục, chi tiết, giỏ hàng, đơn của tôi,
+                       PharmacyStore (đọc/ghi Firebase), model Drug và DrugOrder
+  pharmacist/          Vai trò nhà thuốc: đơn hàng, kho, form thêm/sửa thuốc
+  ai/                  Trợ lý AI: AiChatSession (gọi webhook, kèm drugId), AiChatPage
   chat_screen.dart     Màn hình chat 1-1
   l10n/app_strings.dart  Bảng dịch Anh → Việt, context.tr(), nút EN/VI
   ui/                  Theme, widget dùng chung, home shell responsive
+data/drugs.json        41 thuốc minh họa
+database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết
-scripts/               start-n8n.ps1, register-autostart.ps1
-test/                  Test widget và unit
+scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1
+test/                  Test widget và unit; test/rules/ là test security rules
 ```
 
-Các nhánh dữ liệu trong Realtime Database: `Doctors`, `Patients`, `Requests` (lịch hẹn), `Chat`, `ChatList`.
+Các nhánh dữ liệu trong Realtime Database:
+
+| Nhánh | Nội dung | Quyền |
+|---|---|---|
+| `Doctors`, `Patients` | Hồ sơ người dùng | Đã đăng nhập thì đọc được, chỉ chủ hồ sơ được ghi |
+| `Requests` | Lịch hẹn | Bệnh nhân tạo, bác sĩ đổi trạng thái |
+| `Chat`, `ChatList` | Tin nhắn | Đã đăng nhập thì đọc được, người gửi tạo tin nhắn |
+| `Pharmacists/<uid>` | Đánh dấu tài khoản nhà thuốc | Không ai ghi được từ app |
+| `Drugs/<id>` | Thông tin thuốc, `price`, `stock`, `prescription` | Đã đăng nhập thì đọc được, chỉ nhà thuốc được ghi |
+| `Carts/<uid>` | `{drugId: số lượng}` | Chỉ chủ giỏ. Không cho thêm thuốc kê đơn |
+| `Orders/<id>` | Đơn hàng | Bệnh nhân tạo và xem đơn của mình, chỉ hủy được khi đơn còn `pending`. Nhà thuốc xem tất cả và đổi `status`, `stockDeducted` |
+
+Rules kiểm tra giá và tên thuốc trong đơn phải khớp với `Drugs`, nên client không sửa giá được. Kho bị trừ khi nhà thuốc xác nhận đơn, bằng transaction trên `Drugs/<id>/stock`.
 
 ### Cài đặt
 
-Cần có: Flutter SDK 3.38+, Chrome, Firebase CLI (`npm i -g firebase-tools`).
+Cần có: Flutter SDK 3.38+, Chrome, Firebase CLI (`npm i -g firebase-tools`). Muốn chạy test rules thì cần thêm Node.js 22+ và Java 11+.
 
 ```powershell
 git clone https://github.com/tun12348573/Flutter_doctor_app_master.git
@@ -101,12 +156,33 @@ flutter run -d chrome --web-port 8080 --dart-define=AI_CHAT_URL=http://localhost
 
 Phải dùng cổng `8080` vì CORS của webhook chỉ cho phép `localhost:8080`. Nếu không truyền `AI_CHAT_URL`, tab Trợ lý AI sẽ báo *chưa cấu hình*.
 
+### Dữ liệu thuốc
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/seed-drugs.ps1
+```
+
+Lệnh này nạp [data/drugs.json](data/drugs.json) vào `Drugs`. Thuốc trùng `id` sẽ bị **ghi đè cả số tồn**, các thuốc khác giữ nguyên. Nội dung thuốc là dữ liệu minh họa, cần người có chuyên môn rà lại trước khi dùng thật.
+
+### Cấp tài khoản nhà thuốc
+
+1. Firebase Console → Authentication → **Add user**: nhập email và mật khẩu, rồi copy **User UID**.
+2. Chạy lệnh:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_UID> -Email <email>
+# Thu hồi quyền: thêm -Remove
+```
+
 ### Test
 
 ```powershell
 flutter analyze
 flutter test
 node n8n/test-workflow.cjs
+
+# Security rules (chạy emulator, cần Java)
+cd test/rules; npm install; npm test
 ```
 
 ### Trợ lý AI
@@ -114,8 +190,10 @@ node n8n/test-workflow.cjs
 Luồng xử lý:
 
 ```
-App ──POST + Firebase ID token──▶ Tailscale Funnel ──▶ n8n webhook
-     ──▶ xác minh token với Firebase ──▶ giới hạn 20 câu/giờ/uid ──▶ Ollama ──▶ App
+App ──POST + Firebase ID token (+ drugId)──▶ Tailscale Funnel ──▶ n8n webhook
+     ──▶ xác minh token với Firebase ──▶ giới hạn 20 câu/giờ/uid
+     ──▶ có drugId? đọc Drugs/<id> bằng token của bệnh nhân, đưa vào prompt
+     ──▶ Ollama ──▶ App
 ```
 
 Máy chủ AI là máy Windows của chủ dự án:
@@ -126,12 +204,15 @@ Máy chủ AI là máy Windows của chủ dự án:
 
 Hướng dẫn cài đặt, cấu hình và xử lý sự cố: [n8n/README.md](n8n/README.md).
 
-### Deploy web
+### Deploy
 
 ```powershell
+firebase deploy --only database --project doctor-app-df8ca   # rules, chạy test rules trước
 flutter build web --release --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
 firebase deploy --only hosting --project doctor-app-df8ca
 ```
+
+Lệnh deploy database sẽ **ghi đè** rules đang có trên Firebase Console bằng nội dung file `database.rules.json`.
 
 ### Đóng góp
 

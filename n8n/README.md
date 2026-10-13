@@ -45,7 +45,9 @@ Sau đó import và chạy như trên. Không commit `.local/` vì chứa cơ s�
 
 `patient-ai.workflow.json` có thể import từ giao diện n8n. Sửa model trong node **Prepare AI request**, và URL Ollama trong **Ask Ollama** nếu chạy khác máy. Model đang cấu hình tắt thinking và dùng câu trả lời JSON không streaming. Firebase Web API key trong workflow là cấu hình công khai của project, không phải khóa quản trị. Không đặt API key quản trị hoặc service-account key trong Flutter.
 
-Webhook nhận JSON `{message, language, history}` và header `Authorization: Bearer <Firebase ID token>`. Token phải thuộc `doctor-app-df8ca`, được Firebase xác minh trước khi gọi AI. Trả `{reply, model}` hoặc HTTP 400/401/429/502. Giới hạn một workflow production chạy cùng lúc để tránh quá tải model cục bộ.
+Webhook nhận JSON `{message, language, history, drugId?}` và header `Authorization: Bearer <Firebase ID token>`. Token phải thuộc `doctor-app-df8ca`, được Firebase xác minh trước khi gọi AI. Trả `{reply, model}` hoặc HTTP 400/401/429/502. Giới hạn một workflow production chạy cùng lúc để tránh quá tải model cục bộ.
+
+Nếu có `drugId` (chỉ gồm `A-Z a-z 0-9 _ -`, tối đa 64 ký tự), node **Load drug** đọc `Drugs/<drugId>` từ Realtime Database bằng chính ID token của bệnh nhân (không dùng khóa quản trị), và node **Add drug context** đưa tên, hoạt chất, công dụng, cách dùng, chống chỉ định, tác dụng phụ vào system prompt. Không đọc được thì vẫn trả lời như câu hỏi chung. Với thuốc kê đơn, prompt cấm AI gợi ý liều. n8n không nhận nội dung thuốc do client gửi lên.
 
 Giới hạn **20 câu/giờ cho mỗi uid**, trả HTTP 429 khi vượt. Bộ đếm nằm trong workflow static data của n8n (node **Prepare AI request**; sửa số `20` ở đó).
 

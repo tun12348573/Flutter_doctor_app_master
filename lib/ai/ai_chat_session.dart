@@ -29,6 +29,9 @@ class AiChatSession extends ChangeNotifier {
   bool sending = false;
   String draft = '';
   String? error;
+
+  /// Catalog medicine the conversation is about; n8n loads its details by id.
+  ({String id, String name})? drug;
   bool _disposed = false;
 
   bool get configured {
@@ -72,6 +75,7 @@ class AiChatSession extends ChangeNotifier {
               'message': text,
               'language': language == 'vi' ? 'vi' : 'en',
           'history': _history(),
+              if (drug != null) 'drugId': drug!.id,
             }),
           )
           .timeout(const Duration(seconds: 120));
@@ -108,9 +112,23 @@ class AiChatSession extends ChangeNotifier {
     }
   }
 
+  void askAbout(String id, String name, String question) {
+    if (sending) return;
+    drug = (id: id, name: name);
+    draft = question;
+    error = null;
+    notifyListeners();
+  }
+
+  void forgetDrug() {
+    drug = null;
+    notifyListeners();
+  }
+
   void clear() {
     if (sending) return;
     _messages.clear();
+    drug = null;
     draft = '';
     error = null;
     notifyListeners();

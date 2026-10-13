@@ -1,10 +1,8 @@
 import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import '../doctor/doctor_home_page.dart';
-import '../patient/patient_home_page.dart';
 import '../ui/app_widgets.dart';
+import 'role_home.dart';
 import 'signup_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,24 +28,15 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email.trim(), password: password);
-      final uid = credential.user!.uid;
-      final database = FirebaseDatabase.instance.ref();
-      final doctor = await database.child('Doctors').child(uid).get();
-      final patient = doctor.exists
-          ? null
-          : await database.child('Patients').child(uid).get();
+      final home = await homeForUser(credential.user!.uid);
       if (!mounted) return;
-      if (!doctor.exists && patient?.exists != true) {
+      if (home == null) {
         setState(() => _error =
             'Your profile could not be found. Please contact the demo administrator.');
         return;
       }
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (_) => doctor.exists
-                  ? const DoctorHomePage()
-                  : const PatientHomePage()),
-          (_) => false);
+          MaterialPageRoute(builder: (_) => home), (_) => false);
     } on FirebaseAuthException {
       if (mounted) {
         setState(() => _error =

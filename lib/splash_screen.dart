@@ -1,10 +1,8 @@
 import 'package:practice/l10n/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'auth/login_page.dart';
-import 'doctor/doctor_home_page.dart';
-import 'patient/patient_home_page.dart';
+import 'auth/role_home.dart';
 import 'ui/app_widgets.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -27,18 +25,8 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() => _failed = false);
     try {
       final user = await FirebaseAuth.instance.authStateChanges().first;
-      Widget page = const LoginPage();
-      if (user != null) {
-        final database = FirebaseDatabase.instance.ref();
-        final doctor = await database.child('Doctors').child(user.uid).get();
-        if (doctor.exists) {
-          page = const DoctorHomePage();
-        } else {
-          final patient =
-              await database.child('Patients').child(user.uid).get();
-          if (patient.exists) page = const PatientHomePage();
-        }
-      }
+      final page = (user == null ? null : await homeForUser(user.uid)) ??
+          const LoginPage();
       if (mounted) {
         Navigator.of(context)
             .pushReplacement(MaterialPageRoute(builder: (_) => page));

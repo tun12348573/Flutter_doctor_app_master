@@ -141,6 +141,20 @@ class _AiChatPageState extends State<AiChatPage> {
                                             ));
                                       },
                                     )),
+                      if (session.drug != null)
+                        Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                            child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: InputChip(
+                                    avatar: const Icon(Icons.medication_outlined),
+                                    label: Text(context.tr('About: {name}',
+                                        {'name': session.drug!.name})),
+                                    deleteButtonTooltipMessage:
+                                        context.tr('Stop asking about this medicine'),
+                                    onDeleted: session.sending
+                                        ? null
+                                        : session.forgetDrug))),
                       if (session.error != null)
                         Padding(
                             padding: const EdgeInsets.symmetric(

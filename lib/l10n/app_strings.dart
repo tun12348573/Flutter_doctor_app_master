@@ -34,6 +34,31 @@ extension AppTranslation on BuildContext {
 }
 
 const vietnamese = <String, String>{
+  'AI assistant': 'Trợ lý AI',
+  'New conversation': 'Cuộc trò chuyện mới',
+  'Clear this conversation?': 'Xóa cuộc trò chuyện này?',
+  'Clear': 'Xóa',
+  'You': 'Bạn',
+  'Your question': 'Câu hỏi của bạn',
+  'AI can make mistakes. For general information, not diagnosis or prescriptions. For emergencies, contact local emergency services.':
+      'AI có thể trả lời sai. Chỉ cung cấp thông tin chung, không chẩn đoán hay kê đơn. Khi khẩn cấp, hãy liên hệ cấp cứu địa phương.',
+  'AI assistant is not configured yet.': 'Trợ lý AI chưa được cấu hình.',
+  'Please contact the app administrator.':
+      'Vui lòng liên hệ quản trị viên ứng dụng.',
+  'How can I help?': 'Tôi có thể giúp gì cho bạn?',
+  'Ask about general health or preparing for a visit. Avoid sharing identifying information.':
+      'Hỏi về sức khỏe chung hoặc chuẩn bị đi khám. Tránh chia sẻ thông tin định danh cá nhân.',
+  'AI is preparing a reply...': 'AI đang chuẩn bị câu trả lời...',
+  'Enter a question of up to 2,000 characters.':
+      'Nhập câu hỏi tối đa 2.000 ký tự.',
+  'Please sign in again to use the AI assistant.':
+      'Vui lòng đăng nhập lại để sử dụng trợ lý AI.',
+  'The AI took too long. Please try again.':
+      'AI phản hồi quá lâu. Vui lòng thử lại.',
+  'Too many questions. Please try again later.':
+      'Bạn đã hỏi quá nhiều. Vui lòng thử lại sau.',
+  'Unable to reach the AI assistant. Please try again.':
+      'Không thể kết nối trợ lý AI. Vui lòng thử lại.',
   "Welcome back": "Chào mừng trở lại",
   "Your next step to better care starts here.":
       "Bắt đầu hành trình chăm sóc sức khỏe của bạn.",

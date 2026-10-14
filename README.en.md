@@ -18,6 +18,7 @@ Doctors review appointments. The pharmacy processes orders and manages inventory
 ### General
 
 - **Language:** use the **EN / VI** switch at the corner of the screen.
+- **Dark mode:** the app follows the light/dark setting of your device or browser.
 - **Sign up:** choose *Patient* or *Doctor*, then enter your name, email, password (at least 6 characters), phone number and city. You can tap **Use current location** to save your coordinates. Doctors also enter their specialty, qualification and years of experience.
 - **Pharmacist** accounts cannot sign up themselves; an administrator grants them (see [Granting a pharmacist account](#granting-a-pharmacist-account)).
 - **Sign in / out:** sign in with email and password; the app opens the screens for your role. **Sign out** is in the *My account* tab.
@@ -89,7 +90,7 @@ A doctor's profile also has these buttons:
 
 | Layer | Technology |
 |---|---|
-| App | Flutter 3.38 / Dart ≥3.4, Material, `google_fonts`, `flutter_localizations` + `intl` |
+| App | Flutter 3.38 / Dart ≥3.4, Material 3 (light + dark theme), Lexend + Noto Sans fonts (Vietnamese glyphs, bundled), `google_fonts`, `flutter_localizations` + `intl` |
 | Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Storage, Hosting |
 | Device | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
 | AI assistant | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, exposed to the internet with Tailscale Funnel |
@@ -113,6 +114,7 @@ lib/
   chat_screen.dart     One-to-one chat
   l10n/app_strings.dart  English → Vietnamese strings, context.tr(), EN/VI switch
   ui/                  Theme, shared widgets, responsive home shell
+assets/fonts/          Lexend, Noto Sans (TTF) and their OFL licences
 data/drugs.json        41 demo medicines
 database.rules.json    Realtime Database security rules
 n8n/                   AI workflow, workflow test, detailed guide

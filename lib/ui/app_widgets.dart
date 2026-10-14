@@ -12,6 +12,76 @@ class ContentWidth extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth), child: child));
 }
 
+/// App logo tile. Decorative: the app name is always shown next to it or in
+/// the page title, so screen readers skip it.
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, this.size = 40});
+  final double size;
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+        child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [scheme.primary, scheme.secondary]),
+                borderRadius: BorderRadius.circular(size * 0.3)),
+            child: Icon(Icons.health_and_safety_outlined,
+                size: size * 0.6, color: scheme.onPrimary)));
+  }
+}
+
+enum StatusTone { pending, active, done, stopped }
+
+/// Status label with icon and colour, so status never relies on colour alone.
+class StatusPill extends StatelessWidget {
+  const StatusPill({super.key, required this.label, required this.tone});
+  final String label;
+  final StatusTone tone;
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final (bg, fg, icon) = switch (tone) {
+      StatusTone.pending => (
+          scheme.tertiaryContainer,
+          scheme.onTertiaryContainer,
+          Icons.schedule
+        ),
+      StatusTone.active => (
+          scheme.primaryContainer,
+          scheme.onPrimaryContainer,
+          Icons.local_shipping_outlined
+        ),
+      StatusTone.done => (
+          scheme.secondaryContainer,
+          scheme.onSecondaryContainer,
+          Icons.check_circle_outline
+        ),
+      StatusTone.stopped => (
+          scheme.errorContainer,
+          scheme.onErrorContainer,
+          Icons.cancel_outlined
+        ),
+    };
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          ExcludeSemantics(child: Icon(icon, size: 16, color: fg)),
+          const SizedBox(width: 6),
+          Flexible(
+              child: Text(label,
+                  style: TextStyle(
+                      color: fg, fontSize: 14, fontWeight: FontWeight.w600))),
+        ]));
+  }
+}
+
 class AuthLayout extends StatelessWidget {
   const AuthLayout(
       {super.key,
@@ -31,9 +101,7 @@ class AuthLayout extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(children: [
-                      Icon(Icons.health_and_safety_outlined,
-                          size: 32,
-                          color: Theme.of(context).colorScheme.primary),
+                      const BrandMark(),
                       const SizedBox(width: 12),
                       Flexible(
                           child: Text('DoctorApp',

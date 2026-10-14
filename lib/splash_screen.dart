@@ -51,9 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: SingleChildScrollView(
                     padding: const EdgeInsets.all(32),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.health_and_safety_outlined,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.primary),
+                      const BrandMark(size: 72),
                       const SizedBox(height: 24),
                       Text('DoctorApp',
                           style: Theme.of(context).textTheme.headlineMedium),

@@ -1,6 +1,7 @@
 import 'package:practice/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import '../doctor/model/booking.dart';
+import 'app_widgets.dart';
 
 class BookingCard extends StatelessWidget {
   const BookingCard({super.key, required this.booking, this.onTap});
@@ -22,17 +23,23 @@ class BookingCard extends StatelessWidget {
                     Wrap(spacing: 16, runSpacing: 8, children: [
                       Text(context.appointmentDate(booking.date)),
                       Text(context.appointmentTime(booking.time)),
-                      Text(
-                          context.tr('Status: {status}',
+                      StatusPill(
+                          label: context.tr('Status: {status}',
                               {'status': context.tr(booking.status)}),
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600)),
+                          tone: switch (booking.status) {
+                            'Accepted' => StatusTone.active,
+                            'Completed' => StatusTone.done,
+                            'Rejected' => StatusTone.stopped,
+                            _ => StatusTone.pending,
+                          }),
                     ]),
                     if (onTap != null)
                       Padding(
                           padding: const EdgeInsets.only(top: 12),
-                          child: Text(context.tr('Review appointment'))),
+                          child: Text(context.tr('Review appointment'),
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600))),
                   ]),
             )),
       );

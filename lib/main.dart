@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               title: 'DoctorApp',
               theme: buildAppTheme(),
+              darkTheme: buildDarkAppTheme(),
               locale: locale,
               supportedLocales: const [Locale('en'), Locale('vi')],
               localizationsDelegates: GlobalMaterialLocalizations.delegates,

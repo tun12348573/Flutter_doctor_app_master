@@ -23,11 +23,9 @@ class _HomeShellState extends State<HomeShell> {
                   selectedIndex: _selected,
                   onDestinationSelected: (i) => setState(() => _selected = i),
                   labelType: NavigationRailLabelType.all,
-                  leading: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Icon(Icons.health_and_safety_outlined,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 36)),
+                  leading: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: BrandMark()),
                   destinations: widget.destinations
                       .map((d) => NavigationRailDestination(
                           icon: d.icon,

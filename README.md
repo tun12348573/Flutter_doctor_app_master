@@ -18,6 +18,7 @@ Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý 
 ### Chung
 
 - **Đổi ngôn ngữ:** bấm nút **EN / VI** ở góc màn hình.
+- **Chế độ tối:** app tự theo cài đặt sáng/tối của thiết bị hoặc trình duyệt.
 - **Đăng ký:** chọn vai trò *Bệnh nhân* hoặc *Bác sĩ*, rồi nhập họ tên, email, mật khẩu (tối thiểu 6 ký tự), số điện thoại và thành phố. Có thể bấm **Dùng vị trí hiện tại** để lưu tọa độ. Bác sĩ phải nhập thêm chuyên khoa, bằng cấp và số năm kinh nghiệm.
 - Tài khoản **nhà thuốc** không tự đăng ký được, do quản trị viên cấp (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc)).
 - **Đăng nhập / đăng xuất:** đăng nhập bằng email và mật khẩu, app tự chuyển đến giao diện theo vai trò. Nút **Đăng xuất** nằm ở tab *Tài khoản*.
@@ -89,7 +90,7 @@ Trong hồ sơ bác sĩ còn có các nút:
 
 | Lớp | Công nghệ |
 |---|---|
-| App | Flutter 3.38 / Dart ≥3.4, Material, `google_fonts`, `flutter_localizations` + `intl` |
+| App | Flutter 3.38 / Dart ≥3.4, Material 3 (theme sáng + tối), font Lexend + Noto Sans (có tiếng Việt, đóng gói sẵn), `google_fonts`, `flutter_localizations` + `intl` |
 | Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Storage, Hosting |
 | Thiết bị | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
 | Trợ lý AI | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, mở ra internet bằng Tailscale Funnel |
@@ -113,6 +114,7 @@ lib/
   chat_screen.dart     Màn hình chat 1-1
   l10n/app_strings.dart  Bảng dịch Anh → Việt, context.tr(), nút EN/VI
   ui/                  Theme, widget dùng chung, home shell responsive
+assets/fonts/          Lexend, Noto Sans (TTF) và giấy phép OFL
 data/drugs.json        41 thuốc minh họa
 database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết

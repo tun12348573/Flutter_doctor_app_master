@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_strings.dart';
+import '../ui/app_widgets.dart';
 import 'model/drug.dart';
 import 'model/drug_order.dart';
 
@@ -107,10 +108,14 @@ class OrderCard extends StatelessWidget {
                           'id': order.id.substring(order.id.length - 6).toUpperCase()
                         }),
                         style: theme.textTheme.titleMedium),
-                    Text(context.tr(order.statusLabel),
-                        style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600)),
+                    StatusPill(
+                        label: context.tr(order.statusLabel),
+                        tone: switch (order.status) {
+                          'shipping' => StatusTone.active,
+                          'delivered' => StatusTone.done,
+                          'cancelled' => StatusTone.stopped,
+                          _ => StatusTone.pending,
+                        }),
                     if (created.isNotEmpty) Text(created),
                   ]),
                   const SizedBox(height: 12),

@@ -90,7 +90,7 @@ Trong hồ sơ bác sĩ còn có các nút:
 
 | Lớp | Công nghệ |
 |---|---|
-| App | Flutter 3.38 / Dart ≥3.4, Material 3 (theme sáng + tối), font Lexend + Noto Sans (có tiếng Việt, đóng gói sẵn), `google_fonts`, `flutter_localizations` + `intl` |
+| App | Flutter 3.38 / Dart ≥3.4, Material 3 (theme sáng + tối), font Lexend + Noto Sans (có tiếng Việt, đóng gói sẵn), `flutter_localizations` + `intl` |
 | Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Storage, Hosting |
 | Thiết bị | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
 | Trợ lý AI | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, mở ra internet bằng Tailscale Funnel |

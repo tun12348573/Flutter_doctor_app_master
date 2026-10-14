@@ -90,7 +90,7 @@ A doctor's profile also has these buttons:
 
 | Layer | Technology |
 |---|---|
-| App | Flutter 3.38 / Dart ≥3.4, Material 3 (light + dark theme), Lexend + Noto Sans fonts (Vietnamese glyphs, bundled), `google_fonts`, `flutter_localizations` + `intl` |
+| App | Flutter 3.38 / Dart ≥3.4, Material 3 (light + dark theme), Lexend + Noto Sans fonts (Vietnamese glyphs, bundled), `flutter_localizations` + `intl` |
 | Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Storage, Hosting |
 | Device | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
 | AI assistant | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, exposed to the internet with Tailscale Funnel |

@@ -118,7 +118,8 @@ assets/fonts/          Lexend, Noto Sans (TTF) và giấy phép OFL
 data/drugs.json        41 thuốc minh họa
 database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết
-scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1
+scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
+                       migrate-chat.ps1
 test/                  Test widget và unit; test/rules/ là test security rules
 ```
 
@@ -128,7 +129,8 @@ Các nhánh dữ liệu trong Realtime Database:
 |---|---|---|
 | `Doctors`, `Patients` | Hồ sơ người dùng | Đã đăng nhập thì đọc được, chỉ chủ hồ sơ được ghi |
 | `Requests` | Lịch hẹn | Bệnh nhân tạo, bác sĩ đổi trạng thái |
-| `Chat`, `ChatList` | Tin nhắn | Đã đăng nhập thì đọc được, người gửi tạo tin nhắn |
+| `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được, người gửi tạo tin nhắn |
+| `ChatList` | Danh sách người đã nhắn tin | Đã đăng nhập thì đọc được |
 | `Pharmacists/<uid>` | Đánh dấu tài khoản nhà thuốc | Không ai ghi được từ app |
 | `Drugs/<id>` | Thông tin thuốc, `price`, `stock`, `prescription` | Đã đăng nhập thì đọc được, chỉ nhà thuốc được ghi |
 | `Carts/<uid>` | `{drugId: số lượng}` | Chỉ chủ giỏ. Không cho thêm thuốc kê đơn |
@@ -215,6 +217,12 @@ firebase deploy --only hosting --project doctor-app-df8ca
 ```
 
 Lệnh deploy database sẽ **ghi đè** rules đang có trên Firebase Console bằng nội dung file `database.rules.json`.
+
+Nếu database còn tin nhắn kiểu cũ (nằm thẳng dưới `Chat`), chạy script sau **trước** khi deploy rules. Script chuyển tin nhắn sang `Chat/<uidA_uidB>` và lưu bản sao vào `.local/`. Chạy lại nhiều lần vẫn an toàn.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
+```
 
 ### Đóng góp
 

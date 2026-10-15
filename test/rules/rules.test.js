@@ -37,6 +37,25 @@ describe('Pharmacists', () => {
   });
 });
 
+describe('Chat', () => {
+  const msg = (sender, receiver) => ({message: 'hi', sender, receiver, timestamp: '2026-01-01T00:00:00'});
+  test('only the two participants read a conversation', async () => {
+    await assertSucceeds(set(ref(db('alice'), 'Chat/alice_bob/m1'), msg('alice', 'bob')));
+    await assertSucceeds(get(ref(db('alice'), 'Chat/alice_bob')));
+    await assertSucceeds(get(ref(db('bob'), 'Chat/alice_bob')));
+    await assertFails(get(ref(db('eve'), 'Chat/alice_bob')));
+    await assertFails(get(ref(db('eve'), 'Chat')));
+    await assertFails(get(ref(db('ali'), 'Chat/alice_bob')));
+  });
+  test('messages cannot be forged, misfiled or edited', async () => {
+    await assertFails(set(ref(db('eve'), 'Chat/alice_bob/m2'), msg('alice', 'bob')));
+    await assertFails(set(ref(db('eve'), 'Chat/alice_bob/m2'), msg('eve', 'bob')));
+    await assertFails(set(ref(db('alice'), 'Chat/alice_alice/m2'), msg('alice', 'alice')));
+    await assertSucceeds(set(ref(db('bob'), 'Chat/alice_bob/m2'), msg('bob', 'alice')));
+    await assertFails(set(ref(db('bob'), 'Chat/alice_bob/m2'), msg('bob', 'alice')));
+  });
+});
+
 describe('Drugs', () => {
   test('signed-in users read the catalog, guests do not', async () => {
     await assertSucceeds(get(ref(db('alice'), 'Drugs')));

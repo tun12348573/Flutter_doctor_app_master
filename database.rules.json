@@ -29,10 +29,12 @@
     },
 
     "Chat": {
-      ".read": "auth != null",
-      "$id": {
-        ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid",
-        ".validate": "newData.hasChildren(['message', 'sender', 'receiver', 'timestamp']) && newData.child('message').isString() && newData.child('receiver').isString() && newData.child('timestamp').isString()"
+      "$chatId": {
+        ".read": "auth != null && ($chatId.beginsWith(auth.uid + '_') || $chatId.endsWith('_' + auth.uid))",
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid && newData.child('receiver').val() != auth.uid && ($chatId == auth.uid + '_' + newData.child('receiver').val() || $chatId == newData.child('receiver').val() + '_' + auth.uid)",
+          ".validate": "newData.hasChildren(['message', 'sender', 'receiver', 'timestamp']) && newData.child('message').isString() && newData.child('receiver').isString() && newData.child('timestamp').isString()"
+        }
       }
     },
 

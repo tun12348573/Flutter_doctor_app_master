@@ -118,7 +118,8 @@ assets/fonts/          Lexend, Noto Sans (TTF) and their OFL licences
 data/drugs.json        41 demo medicines
 database.rules.json    Realtime Database security rules
 n8n/                   AI workflow, workflow test, detailed guide
-scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1
+scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
+                       migrate-chat.ps1
 test/                  Widget and unit tests; test/rules/ tests the security rules
 ```
 
@@ -128,7 +129,8 @@ Realtime Database nodes:
 |---|---|---|
 | `Doctors`, `Patients` | User profiles | Readable when signed in; only the owner writes |
 | `Requests` | Appointments | Patient creates, doctor updates status |
-| `Chat`, `ChatList` | Messages | Readable when signed in; the sender creates messages |
+| `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it; the sender creates messages |
+| `ChatList` | Who each user has chatted with | Readable when signed in |
 | `Pharmacists/<uid>` | Pharmacist role marker | Nobody can write from the app |
 | `Drugs/<id>` | Medicine info, `price`, `stock`, `prescription` | Readable when signed in; only pharmacists write |
 | `Carts/<uid>` | `{drugId: quantity}` | Owner only; prescription medicines rejected |
@@ -215,6 +217,12 @@ firebase deploy --only hosting --project doctor-app-df8ca
 ```
 
 Deploying the database **replaces** the rules in Firebase Console with `database.rules.json`.
+
+If the database still has old-style messages (directly under `Chat`), run this **before** deploying the rules. It moves them to `Chat/<uidA_uidB>` and saves a backup in `.local/`. It is safe to run more than once.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
+```
 
 ### Contributing
 

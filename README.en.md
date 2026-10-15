@@ -62,7 +62,9 @@ A doctor's profile also has these buttons:
 |---|---|
 | **Appointments** | View patients' appointment requests. Tap a request to set it to *Accepted*, *Rejected* or *Completed*, then tap **Save status**. |
 | **Messages** | Reply to patients. |
-| **My account** | View your profile (email, phone, city, qualification, experience); sign out. |
+| **My account** | View your profile (email, phone, city, qualification, experience) and verification status; sign out. |
+
+A newly registered doctor sees *Awaiting verification: patients cannot find you yet*. Doctors appear in *Find care*, receive appointments and can read patient profiles only after an administrator verifies them (see [Verifying a doctor](#verifying-a-doctor)). The status then changes to *Verified*.
 
 ### Pharmacists
 
@@ -119,7 +121,7 @@ data/drugs.json        41 demo medicines
 database.rules.json    Realtime Database security rules
 n8n/                   AI workflow, workflow test, detailed guide
 scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
-                       migrate-chat.ps1
+                       migrate-chat.ps1, verify-doctor.ps1
 test/                  Widget and unit tests; test/rules/ tests the security rules
 ```
 
@@ -127,10 +129,11 @@ Realtime Database nodes:
 
 | Node | Contents | Access |
 |---|---|---|
-| `Doctors`, `Patients` | User profiles | Readable when signed in; only the owner writes |
-| `Requests` | Appointments | Patient creates, doctor updates status |
+| `Doctors` | Doctor profiles, `verified` | Readable when signed in. Only the owner writes, and cannot change `verified` |
+| `Patients/<uid>` | Patient profiles | The owner and verified doctors read; only the owner writes |
+| `Requests` | Appointments | Patient creates, only for verified doctors. Doctor updates status (`Accepted`, `Rejected`, `Completed`) |
 | `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it; the sender creates messages |
-| `ChatList` | Who each user has chatted with | Readable when signed in |
+| `ChatList/<uid>` | Who each user has chatted with | Only the owner reads |
 | `Pharmacists/<uid>` | Pharmacist role marker | Nobody can write from the app |
 | `Drugs/<id>` | Medicine info, `price`, `stock`, `prescription` | Readable when signed in; only pharmacists write |
 | `Carts/<uid>` | `{drugId: quantity}` | Owner only; prescription medicines rejected |
@@ -177,6 +180,17 @@ This loads [data/drugs.json](data/drugs.json) into `Drugs`. Medicines with the s
 powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_UID> -Email <email>
 # Revoke: add -Remove
 ```
+
+### Verifying a doctor
+
+Doctors register in the app, but patients only see them once they are verified. Check the doctor's credentials, copy their **User UID** from Firebase Console → Authentication, then run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>
+# Un-verify: add -Remove
+```
+
+After deploying these rules for the first time, doctors who registered earlier must be verified the same way.
 
 ### Tests
 

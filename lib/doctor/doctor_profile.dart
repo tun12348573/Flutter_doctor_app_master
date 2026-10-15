@@ -83,6 +83,15 @@ class _DoctorProfileState extends State<DoctorProfile> {
                                       'Doctor'),
                                   style:
                                       Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 12),
+                              profile['verified'] == true
+                                  ? StatusPill(
+                                      label: context.tr('Verified'),
+                                      tone: StatusTone.done)
+                                  : StatusPill(
+                                      label: context.tr(
+                                          'Awaiting verification: patients cannot find you yet'),
+                                      tone: StatusTone.pending),
                               const Divider(height: 32),
                               Text(context.tr('Email: {value}', {
                                 'value': profile['email']?.toString() ?? ''

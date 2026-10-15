@@ -186,6 +186,9 @@ const vietnamese = <String, String>{
   "Email: {value}": "Email: {value}",
   "City: {value}": "Thành phố: {value}",
   "Experience: {years} years": "Kinh nghiệm: {years} năm",
+  "Verified": "Đã xác minh",
+  "Awaiting verification: patients cannot find you yet":
+      "Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn",
   "Refresh conversations": "Tải lại cuộc trò chuyện",
   "Unable to load messages": "Không thể tải tin nhắn",
   "No conversations yet": "Chưa có cuộc trò chuyện",

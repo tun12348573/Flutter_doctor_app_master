@@ -37,6 +37,41 @@ describe('Pharmacists', () => {
   });
 });
 
+describe('Doctors and patients', () => {
+  const profile = (uid, extra = {}) => ({uid, firstName: uid, ...extra});
+  const request = (id, sender, receiver, extra = {}) =>
+    ({id, sender, receiver, date: '01/02/2026', time: '9:00 AM', description: 'x', status: 'pending', ...extra});
+  beforeEach(() => env.withSecurityRulesDisabled(async ctx => {
+    await set(ref(ctx.database(), 'Doctors/drv'), profile('drv', {verified: true}));
+    await set(ref(ctx.database(), 'Doctors/drnew'), profile('drnew'));
+    await set(ref(ctx.database(), 'Patients/alice'), profile('alice'));
+  }));
+  test('doctors cannot verify themselves or drop verification by editing', async () => {
+    await assertFails(set(ref(db('drnew'), 'Doctors/drnew'), profile('drnew', {verified: true})));
+    await assertFails(set(ref(db('drv'), 'Doctors/drv'), profile('drv')));
+    await assertSucceeds(update(ref(db('drv'), 'Doctors/drv'), {firstName: 'Lan'}));
+  });
+  test('only the patient and verified doctors read a patient profile', async () => {
+    await assertSucceeds(get(ref(db('alice'), 'Patients/alice')));
+    await assertSucceeds(get(ref(db('drv'), 'Patients/alice')));
+    await assertFails(get(ref(db('drnew'), 'Patients/alice')));
+    await assertFails(get(ref(db('bob'), 'Patients/alice')));
+    await assertFails(get(ref(db('drv'), 'Patients')));
+  });
+  test('appointments go to verified doctors with a known status', async () => {
+    await assertFails(set(ref(db('alice'), 'Requests/r1'), request('r1', 'alice', 'drnew')));
+    await assertSucceeds(set(ref(db('alice'), 'Requests/r1'), request('r1', 'alice', 'drv')));
+    await assertFails(update(ref(db('drv'), 'Requests/r1'), {status: 'Paid'}));
+    await assertSucceeds(update(ref(db('drv'), 'Requests/r1'), {status: 'Accepted'}));
+  });
+  test('each user reads only their own chat list', async () => {
+    await assertSucceeds(set(ref(db('alice'), 'ChatList/alice/drv'), {id: 'drv'}));
+    await assertSucceeds(get(ref(db('alice'), 'ChatList/alice')));
+    await assertFails(get(ref(db('bob'), 'ChatList/alice')));
+    await assertFails(get(ref(db('bob'), 'ChatList')));
+  });
+});
+
 describe('Chat', () => {
   const msg = (sender, receiver) => ({message: 'hi', sender, receiver, timestamp: '2026-01-01T00:00:00'});
   test('only the two participants read a conversation', async () => {

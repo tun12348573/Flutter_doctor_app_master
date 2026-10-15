@@ -7,13 +7,13 @@
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid == $uid",
-        ".validate": "newData.child('uid').val() == $uid"
+        ".validate": "newData.child('uid').val() == $uid && newData.child('verified').val() == data.child('verified').val()"
       }
     },
 
     "Patients": {
-      ".read": "auth != null",
       "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || root.child('Doctors').child(auth.uid).child('verified').val() == true)",
         ".write": "auth != null && auth.uid == $uid",
         ".validate": "newData.child('uid').val() == $uid"
       }
@@ -23,8 +23,8 @@
       ".indexOn": ["sender", "receiver"],
       ".read": "auth != null && ((query.orderByChild == 'sender' && query.equalTo == auth.uid) || (query.orderByChild == 'receiver' && query.equalTo == auth.uid))",
       "$id": {
-        ".write": "auth != null && newData.exists() && ((!data.exists() && newData.child('sender').val() == auth.uid && newData.child('status').val() == 'pending' && root.child('Doctors').child(newData.child('receiver').val()).exists()) || (data.exists() && data.child('receiver').val() == auth.uid && newData.child('sender').val() == data.child('sender').val() && newData.child('receiver').val() == data.child('receiver').val() && newData.child('id').val() == data.child('id').val() && newData.child('date').val() == data.child('date').val() && newData.child('time').val() == data.child('time').val() && newData.child('description').val() == data.child('description').val()))",
-        ".validate": "newData.hasChildren(['id', 'sender', 'receiver', 'date', 'time', 'description', 'status']) && newData.child('id').val() == $id"
+        ".write": "auth != null && newData.exists() && ((!data.exists() && newData.child('sender').val() == auth.uid && newData.child('status').val() == 'pending' && root.child('Doctors').child(newData.child('receiver').val()).child('verified').val() == true) || (data.exists() && data.child('receiver').val() == auth.uid && newData.child('sender').val() == data.child('sender').val() && newData.child('receiver').val() == data.child('receiver').val() && newData.child('id').val() == data.child('id').val() && newData.child('date').val() == data.child('date').val() && newData.child('time').val() == data.child('time').val() && newData.child('description').val() == data.child('description').val()))",
+        ".validate": "newData.hasChildren(['id', 'sender', 'receiver', 'date', 'time', 'description', 'status']) && newData.child('id').val() == $id && newData.child('status').isString() && newData.child('status').val().matches(/^(pending|Accepted|Rejected|Completed)$/)"
       }
     },
 
@@ -39,8 +39,8 @@
     },
 
     "ChatList": {
-      ".read": "auth != null",
       "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
         "$partner": {
           ".write": "auth != null && (auth.uid == $uid || auth.uid == $partner) && newData.exists()",
           ".validate": "newData.hasChildren(['id']) && newData.child('id').val() == $partner"

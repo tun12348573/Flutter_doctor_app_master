@@ -62,7 +62,9 @@ Trong hồ sơ bác sĩ còn có các nút:
 |---|---|
 | **Lịch hẹn** | Xem yêu cầu đặt lịch của bệnh nhân. Bấm vào một yêu cầu để chuyển trạng thái sang *Đã chấp nhận*, *Đã từ chối* hoặc *Đã hoàn tất*, rồi bấm **Lưu trạng thái**. |
 | **Tin nhắn** | Trả lời tin nhắn của bệnh nhân. |
-| **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), đăng xuất. |
+| **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), trạng thái xác minh, đăng xuất. |
+
+Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn*. Bác sĩ chỉ xuất hiện trong *Tìm bác sĩ*, nhận được lịch hẹn và xem được hồ sơ bệnh nhân sau khi quản trị viên xác minh (xem [Xác minh bác sĩ](#xác-minh-bác-sĩ)). Khi đó trạng thái đổi thành *Đã xác minh*.
 
 ### Nhà thuốc
 
@@ -119,7 +121,7 @@ data/drugs.json        41 thuốc minh họa
 database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết
 scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
-                       migrate-chat.ps1
+                       migrate-chat.ps1, verify-doctor.ps1
 test/                  Test widget và unit; test/rules/ là test security rules
 ```
 
@@ -127,10 +129,11 @@ Các nhánh dữ liệu trong Realtime Database:
 
 | Nhánh | Nội dung | Quyền |
 |---|---|---|
-| `Doctors`, `Patients` | Hồ sơ người dùng | Đã đăng nhập thì đọc được, chỉ chủ hồ sơ được ghi |
-| `Requests` | Lịch hẹn | Bệnh nhân tạo, bác sĩ đổi trạng thái |
+| `Doctors` | Hồ sơ bác sĩ, `verified` | Đã đăng nhập thì đọc được. Chỉ chủ hồ sơ được ghi, nhưng không tự sửa được `verified` |
+| `Patients/<uid>` | Hồ sơ bệnh nhân | Chủ hồ sơ và bác sĩ đã xác minh đọc được, chỉ chủ hồ sơ được ghi |
+| `Requests` | Lịch hẹn | Bệnh nhân tạo, chỉ gửi được cho bác sĩ đã xác minh. Bác sĩ đổi trạng thái (`Accepted`, `Rejected`, `Completed`) |
 | `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được, người gửi tạo tin nhắn |
-| `ChatList` | Danh sách người đã nhắn tin | Đã đăng nhập thì đọc được |
+| `ChatList/<uid>` | Danh sách người đã nhắn tin | Chỉ chủ danh sách đọc được |
 | `Pharmacists/<uid>` | Đánh dấu tài khoản nhà thuốc | Không ai ghi được từ app |
 | `Drugs/<id>` | Thông tin thuốc, `price`, `stock`, `prescription` | Đã đăng nhập thì đọc được, chỉ nhà thuốc được ghi |
 | `Carts/<uid>` | `{drugId: số lượng}` | Chỉ chủ giỏ. Không cho thêm thuốc kê đơn |
@@ -177,6 +180,17 @@ Lệnh này nạp [data/drugs.json](data/drugs.json) vào `Drugs`. Thuốc trùn
 powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_UID> -Email <email>
 # Thu hồi quyền: thêm -Remove
 ```
+
+### Xác minh bác sĩ
+
+Bác sĩ tự đăng ký trong app, nhưng chỉ hiện với bệnh nhân sau khi được xác minh. Kiểm tra bằng cấp của bác sĩ, copy **User UID** của họ trong Firebase Console → Authentication, rồi chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>
+# Bỏ xác minh: thêm -Remove
+```
+
+Sau khi deploy rules này lần đầu, các bác sĩ đã đăng ký từ trước cũng cần được xác minh như trên.
 
 ### Test
 

@@ -5,7 +5,9 @@
         "lib/firebase_options.dart": {
           "projectId": "doctor-app-df8ca",
           "configurations": {
-            "web": "1:145943410879:web:0016732068fb0aa2bc6e0a"
+            "web": "1:145943410879:web:0016732068fb0aa2bc6e0a",
+            "android": "1:145943410879:android:aa062817b3c6fb70bc6e0a",
+            "ios": "1:145943410879:ios:908808f6df7e9f55bc6e0a"
           }
         }
       }

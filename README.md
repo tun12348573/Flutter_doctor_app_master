@@ -9,7 +9,7 @@ DoctorApp là ứng dụng đặt lịch khám và mua thuốc, kết nối **b�
 
 Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý kho. Giao diện có hai ngôn ngữ Anh và Việt.
 
-- Bản web: https://doctor-app-df8ca.web.app
+- Bản web: https://doctor-app-df8ca.web.app. Có thể build cho Android và iOS (xem [Chạy trên Android và iOS](#chạy-trên-android-và-ios)).
 - Trợ lý AI chỉ hoạt động khi máy chủ AI đang bật (xem [Trợ lý AI](#trợ-lý-ai)).
 - Dữ liệu thuốc là **dữ liệu minh họa**. Hãy đọc kỹ hướng dẫn sử dụng và hỏi dược sĩ trước khi dùng thuốc.
 
@@ -93,12 +93,13 @@ Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bện
 | Lớp | Công nghệ |
 |---|---|
 | App | Flutter 3.38 / Dart ≥3.4, Material 3 (theme sáng + tối), font Lexend + Noto Sans (có tiếng Việt, đóng gói sẵn), `flutter_localizations` + `intl` |
-| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Storage, Hosting |
-| Thiết bị | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
+| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Hosting |
+| Thiết bị | `location`, `url_launcher` |
+| Di động | Android: AGP 8.11, Kotlin 2.2, Gradle 8.14, Java 17+, Android SDK 36. iOS 13+. Mã app `vn.doctorapp.app` |
 | Trợ lý AI | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, mở ra internet bằng Tailscale Funnel |
 | Test rules | Firebase Database Emulator (cần Java) + `@firebase/rules-unit-testing` |
 
-Hiện chỉ **web** được cấu hình trong [lib/firebase_options.dart](lib/firebase_options.dart). Muốn chạy Android/iOS thì phải chạy `flutterfire configure` trước.
+Web, Android và iOS đều đã được cấu hình trong [lib/firebase_options.dart](lib/firebase_options.dart), không cần file `google-services.json` hay `GoogleService-Info.plist`.
 
 ### Cấu trúc thư mục
 
@@ -162,6 +163,24 @@ flutter run -d chrome --web-port 8080 --dart-define=AI_CHAT_URL=http://localhost
 ```
 
 Phải dùng cổng `8080` vì CORS của webhook chỉ cho phép `localhost:8080`. Nếu không truyền `AI_CHAT_URL`, tab Trợ lý AI sẽ báo *chưa cấu hình*.
+
+### Chạy trên Android và iOS
+
+**Android** (Windows, macOS hoặc Linux): cần Java 17+ và Android SDK 36 (cài bằng Android Studio → SDK Manager), rồi chạy `flutter doctor --android-licenses`. Cắm điện thoại (bật *USB debugging*) hoặc mở emulator:
+
+```powershell
+flutter devices
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+flutter build apk --release --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai   # file: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**iOS**: chỉ build được trên **macOS** có Xcode (iOS 13+). Lần đầu chạy `cd ios; pod install`. Muốn cài lên iPhone thật thì mở `ios/Runner.xcworkspace` trong Xcode, chọn Team ở *Signing & Capabilities*, rồi:
+
+```bash
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+```
+
+Trên điện thoại, `AI_CHAT_URL` phải là địa chỉ `https` công khai: app chỉ chấp nhận `http` khi trỏ tới `localhost`, mà `localhost` trên điện thoại không phải máy tính của bạn. Bản release Android hiện ký bằng debug key, nên chỉ dùng để cài thử. Muốn đưa lên Google Play thì phải tạo keystore riêng.
 
 ### Dữ liệu thuốc
 

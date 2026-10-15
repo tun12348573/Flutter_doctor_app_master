@@ -21,15 +21,9 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -62,5 +56,26 @@ class DefaultFirebaseOptions {
         'https://doctor-app-df8ca-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'doctor-app-df8ca.firebasestorage.app',
     measurementId: 'G-5RC6FVFCZV',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyD1jZllk6feNoFt8EUZQp1CSfEcGirfR7s',
+    appId: '1:145943410879:android:aa062817b3c6fb70bc6e0a',
+    messagingSenderId: '145943410879',
+    projectId: 'doctor-app-df8ca',
+    databaseURL:
+        'https://doctor-app-df8ca-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'doctor-app-df8ca.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBKBAmXt8YAakGvGKWDxT6iDektVsxvMPM',
+    appId: '1:145943410879:ios:908808f6df7e9f55bc6e0a',
+    messagingSenderId: '145943410879',
+    projectId: 'doctor-app-df8ca',
+    databaseURL:
+        'https://doctor-app-df8ca-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'doctor-app-df8ca.firebasestorage.app',
+    iosBundleId: 'vn.doctorapp.app',
   );
 }

@@ -9,7 +9,7 @@ DoctorApp is an appointment booking and medicine ordering app that connects **pa
 
 Doctors review appointments. The pharmacy processes orders and manages inventory. The interface is available in English and Vietnamese.
 
-- Web app: https://doctor-app-df8ca.web.app
+- Web app: https://doctor-app-df8ca.web.app. Also builds for Android and iOS (see [Run on Android and iOS](#run-on-android-and-ios)).
 - The AI assistant only works while the AI server is on (see [AI assistant](#ai-assistant)).
 - Medicine data is **demo data** (written in Vietnamese). Read the package leaflet and ask a pharmacist before taking any medicine.
 
@@ -93,12 +93,13 @@ A newly registered doctor sees *Awaiting verification: patients cannot find you 
 | Layer | Technology |
 |---|---|
 | App | Flutter 3.38 / Dart ≥3.4, Material 3 (light + dark theme), Lexend + Noto Sans fonts (Vietnamese glyphs, bundled), `flutter_localizations` + `intl` |
-| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Storage, Hosting |
-| Device | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
+| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Hosting |
+| Device | `location`, `url_launcher` |
+| Mobile | Android: AGP 8.11, Kotlin 2.2, Gradle 8.14, Java 17+, Android SDK 36. iOS 13+. App ID `vn.doctorapp.app` |
 | AI assistant | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, exposed to the internet with Tailscale Funnel |
 | Rules tests | Firebase Database Emulator (needs Java) + `@firebase/rules-unit-testing` |
 
-Only **web** is configured in [lib/firebase_options.dart](lib/firebase_options.dart). To run on Android or iOS, run `flutterfire configure` first.
+Web, Android and iOS are all configured in [lib/firebase_options.dart](lib/firebase_options.dart); no `google-services.json` or `GoogleService-Info.plist` is needed.
 
 ### Project layout
 
@@ -162,6 +163,24 @@ flutter run -d chrome --web-port 8080 --dart-define=AI_CHAT_URL=http://localhost
 ```
 
 Use port `8080`, because the webhook's CORS settings only allow `localhost:8080`. If `AI_CHAT_URL` is not set, the AI assistant tab shows *not configured*.
+
+### Run on Android and iOS
+
+**Android** (Windows, macOS or Linux): install Java 17+ and Android SDK 36 (Android Studio → SDK Manager), then run `flutter doctor --android-licenses`. Connect a phone with *USB debugging* on, or start an emulator:
+
+```powershell
+flutter devices
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+flutter build apk --release --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai   # output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**iOS**: builds only on **macOS** with Xcode (iOS 13+). The first time, run `cd ios; pod install`. To install on a real iPhone, open `ios/Runner.xcworkspace` in Xcode, pick your Team under *Signing & Capabilities*, then:
+
+```bash
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+```
+
+On a phone, `AI_CHAT_URL` must be a public `https` address: the app accepts `http` only for `localhost`, and `localhost` on a phone is not your computer. Android release builds are still signed with the debug key, so they are for testing only. Publishing to Google Play needs your own keystore.
 
 ### Medicine data
 

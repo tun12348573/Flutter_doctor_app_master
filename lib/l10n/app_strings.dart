@@ -186,6 +186,21 @@ const vietnamese = <String, String>{
   "Email: {value}": "Email: {value}",
   "City: {value}": "Thành phố: {value}",
   "Experience: {years} years": "Kinh nghiệm: {years} năm",
+  "Verified": "Đã xác minh",
+  "Awaiting verification": "Đang chờ xác minh",
+  "Verify": "Xác minh",
+  "Remove verification": "Bỏ xác minh",
+  "Verify doctors": "Xác minh bác sĩ",
+  "Verify {name}?": "Xác minh {name}?",
+  "Patients will be able to find and book this doctor, and the doctor will be able to read patient profiles. Check their qualification first.":
+      "Bệnh nhân sẽ tìm thấy và đặt lịch được với bác sĩ này, và bác sĩ sẽ xem được hồ sơ bệnh nhân. Hãy kiểm tra bằng cấp trước.",
+  "No doctors yet": "Chưa có bác sĩ",
+  "Doctors who sign up will appear here for review.":
+      "Bác sĩ đăng ký sẽ hiện ở đây để duyệt.",
+  "Doctors": "Bác sĩ",
+  "Administrator account": "Tài khoản quản trị viên",
+  "Awaiting verification: patients cannot find you yet":
+      "Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn",
   "Refresh conversations": "Tải lại cuộc trò chuyện",
   "Unable to load messages": "Không thể tải tin nhắn",
   "No conversations yet": "Chưa có cuộc trò chuyện",

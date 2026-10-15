@@ -32,6 +32,7 @@ class _DoctorListPageState extends State<DoctorListPage> {
     try {
       final snapshot = await FirebaseDatabase.instance.ref('Doctors').get();
       final doctors = snapshot.children
+          .where((s) => s.child('verified').value == true)
           .map((s) => Doctor.fromMap(s.value as Map, s.key!))
           .toList();
       if (mounted) setState(() => _doctors = doctors);

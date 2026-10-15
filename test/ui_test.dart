@@ -10,6 +10,11 @@ import 'package:practice/doctor/model/doctor.dart';
 import 'package:practice/doctor/widget/doctor_card.dart';
 
 void main() {
+  test('Both chat participants get the same conversation id', () {
+    expect(chatId('doc1', 'pat1'), 'doc1_pat1');
+    expect(chatId('pat1', 'doc1'), 'doc1_pat1');
+  });
+
   testWidgets(
       'Message composer retains failed messages and prevents duplicate sends',
       (tester) async {

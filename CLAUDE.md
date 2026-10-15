@@ -1,6 +1,6 @@
 # DoctorApp
 
-Flutter web app (Firebase) + n8n/Ollama AI assistant. Overview in README.md.
+Flutter app for web, Android and iOS (Firebase) + n8n/Ollama AI assistant. Overview in README.md.
 
 ## Keep README in sync
 

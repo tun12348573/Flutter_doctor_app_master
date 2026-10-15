@@ -9,7 +9,7 @@ DoctorApp là ứng dụng đặt lịch khám và mua thuốc, kết nối **b�
 
 Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý kho. Giao diện có hai ngôn ngữ Anh và Việt.
 
-- Bản web: https://doctor-app-df8ca.web.app
+- Bản web: https://doctor-app-df8ca.web.app. Có thể build cho Android và iOS (xem [Chạy trên Android và iOS](#chạy-trên-android-và-ios)).
 - Trợ lý AI chỉ hoạt động khi máy chủ AI đang bật (xem [Trợ lý AI](#trợ-lý-ai)).
 - Dữ liệu thuốc là **dữ liệu minh họa**. Hãy đọc kỹ hướng dẫn sử dụng và hỏi dược sĩ trước khi dùng thuốc.
 
@@ -20,7 +20,7 @@ Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý 
 - **Đổi ngôn ngữ:** bấm nút **EN / VI** ở góc màn hình.
 - **Chế độ tối:** app tự theo cài đặt sáng/tối của thiết bị hoặc trình duyệt.
 - **Đăng ký:** chọn vai trò *Bệnh nhân* hoặc *Bác sĩ*, rồi nhập họ tên, email, mật khẩu (tối thiểu 6 ký tự), số điện thoại và thành phố. Có thể bấm **Dùng vị trí hiện tại** để lưu tọa độ. Bác sĩ phải nhập thêm chuyên khoa, bằng cấp và số năm kinh nghiệm.
-- Tài khoản **nhà thuốc** không tự đăng ký được, do quản trị viên cấp (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc)).
+- Tài khoản **nhà thuốc** và **quản trị viên** không tự đăng ký được, mà được cấp bằng script (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc) và [Cấp tài khoản quản trị viên](#cấp-tài-khoản-quản-trị-viên)).
 - **Đăng nhập / đăng xuất:** đăng nhập bằng email và mật khẩu, app tự chuyển đến giao diện theo vai trò. Nút **Đăng xuất** nằm ở tab *Tài khoản*.
 
 ### Bệnh nhân
@@ -62,7 +62,9 @@ Trong hồ sơ bác sĩ còn có các nút:
 |---|---|
 | **Lịch hẹn** | Xem yêu cầu đặt lịch của bệnh nhân. Bấm vào một yêu cầu để chuyển trạng thái sang *Đã chấp nhận*, *Đã từ chối* hoặc *Đã hoàn tất*, rồi bấm **Lưu trạng thái**. |
 | **Tin nhắn** | Trả lời tin nhắn của bệnh nhân. |
-| **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), đăng xuất. |
+| **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), trạng thái xác minh, đăng xuất. |
+
+Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn*. Bác sĩ chỉ xuất hiện trong *Tìm bác sĩ*, nhận được lịch hẹn và xem được hồ sơ bệnh nhân sau khi quản trị viên xác minh (xem [Quản trị viên](#quản-trị-viên)). Khi đó trạng thái đổi thành *Đã xác minh*.
 
 ### Nhà thuốc
 
@@ -84,6 +86,15 @@ Trong hồ sơ bác sĩ còn có các nút:
 - Bấm vào một thuốc để sửa thông tin. Số tồn không sửa ở đây.
 - Nút **Thêm thuốc** để thêm thuốc mới, nhập tồn kho ban đầu và đánh dấu *Thuốc kê đơn* nếu cần.
 
+### Quản trị viên
+
+| Tab | Chức năng |
+|---|---|
+| **Bác sĩ** | Danh sách mọi bác sĩ, ai *Đang chờ xác minh* xếp lên đầu, kèm email, chuyên khoa, bằng cấp và kinh nghiệm. Bấm **Xác minh** (rồi xác nhận) hoặc **Bỏ xác minh**. |
+| **Tài khoản** | Email tài khoản, đăng xuất. |
+
+Hãy kiểm tra bằng cấp của bác sĩ trước khi bấm **Xác minh**: bác sĩ đã xác minh xem được hồ sơ của mọi bệnh nhân.
+
 ## Dành cho dev
 
 ### Công nghệ
@@ -91,12 +102,13 @@ Trong hồ sơ bác sĩ còn có các nút:
 | Lớp | Công nghệ |
 |---|---|
 | App | Flutter 3.38 / Dart ≥3.4, Material 3 (theme sáng + tối), font Lexend + Noto Sans (có tiếng Việt, đóng gói sẵn), `flutter_localizations` + `intl` |
-| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Storage, Hosting |
-| Thiết bị | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
+| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules trong [database.rules.json](database.rules.json)), Hosting |
+| Thiết bị | `location`, `url_launcher` |
+| Di động | Android: AGP 8.11, Kotlin 2.2, Gradle 8.14, Java 17+, Android SDK 36. iOS 13+. Mã app `vn.doctorapp.app` |
 | Trợ lý AI | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, mở ra internet bằng Tailscale Funnel |
 | Test rules | Firebase Database Emulator (cần Java) + `@firebase/rules-unit-testing` |
 
-Hiện chỉ **web** được cấu hình trong [lib/firebase_options.dart](lib/firebase_options.dart). Muốn chạy Android/iOS thì phải chạy `flutterfire configure` trước.
+Web, Android và iOS đều đã được cấu hình trong [lib/firebase_options.dart](lib/firebase_options.dart), không cần file `google-services.json` hay `GoogleService-Info.plist`.
 
 ### Cấu trúc thư mục
 
@@ -104,12 +116,14 @@ Hiện chỉ **web** được cấu hình trong [lib/firebase_options.dart](lib/
 lib/
   main.dart            Khởi tạo Firebase, theme, ngôn ngữ
   splash_screen.dart   Kiểm tra đăng nhập, chuyển đến màn hình chính theo vai trò
-  auth/                Đăng nhập, đăng ký, role_home.dart (Doctors → Pharmacists → Patients)
+  auth/                Đăng nhập, đăng ký, role_home.dart (Admins → Doctors → Pharmacists → Patients),
+                       account_page.dart (tab tài khoản cho nhà thuốc và quản trị viên)
   patient/             Màn hình chính và danh sách chat của bệnh nhân
   doctor/              Danh sách và hồ sơ bác sĩ, lịch hẹn, model (Doctor, Patient, Booking)
   pharmacy/            Nhà thuốc cho bệnh nhân: danh mục, chi tiết, giỏ hàng, đơn của tôi,
                        PharmacyStore (đọc/ghi Firebase), model Drug và DrugOrder
   pharmacist/          Vai trò nhà thuốc: đơn hàng, kho, form thêm/sửa thuốc
+  admin/               Vai trò quản trị viên: xác minh bác sĩ
   ai/                  Trợ lý AI: AiChatSession (gọi webhook, kèm drugId), AiChatPage
   chat_screen.dart     Màn hình chat 1-1
   l10n/app_strings.dart  Bảng dịch Anh → Việt, context.tr(), nút EN/VI
@@ -118,7 +132,8 @@ assets/fonts/          Lexend, Noto Sans (TTF) và giấy phép OFL
 data/drugs.json        41 thuốc minh họa
 database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết
-scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1
+scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
+                       migrate-chat.ps1, verify-doctor.ps1, add-admin.ps1
 test/                  Test widget và unit; test/rules/ là test security rules
 ```
 
@@ -126,9 +141,12 @@ Các nhánh dữ liệu trong Realtime Database:
 
 | Nhánh | Nội dung | Quyền |
 |---|---|---|
-| `Doctors`, `Patients` | Hồ sơ người dùng | Đã đăng nhập thì đọc được, chỉ chủ hồ sơ được ghi |
-| `Requests` | Lịch hẹn | Bệnh nhân tạo, bác sĩ đổi trạng thái |
-| `Chat`, `ChatList` | Tin nhắn | Đã đăng nhập thì đọc được, người gửi tạo tin nhắn |
+| `Doctors` | Hồ sơ bác sĩ, `verified` | Đã đăng nhập thì đọc được. Chỉ chủ hồ sơ được ghi hồ sơ; chỉ quản trị viên đặt hoặc bỏ `verified` |
+| `Admins/<uid>` | Đánh dấu tài khoản quản trị viên | Không ai ghi được từ app |
+| `Patients/<uid>` | Hồ sơ bệnh nhân | Chủ hồ sơ và bác sĩ đã xác minh đọc được, chỉ chủ hồ sơ được ghi |
+| `Requests` | Lịch hẹn | Bệnh nhân tạo, chỉ gửi được cho bác sĩ đã xác minh. Bác sĩ đổi trạng thái (`Accepted`, `Rejected`, `Completed`) |
+| `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được. Người gửi tạo tin nhắn, chỉ giữa bệnh nhân và bác sĩ đã xác minh |
+| `ChatList/<uid>` | Danh sách người đã nhắn tin | Chỉ chủ danh sách đọc được. Mục mới được ghi cùng tin nhắn và phải có cuộc hội thoại thật |
 | `Pharmacists/<uid>` | Đánh dấu tài khoản nhà thuốc | Không ai ghi được từ app |
 | `Drugs/<id>` | Thông tin thuốc, `price`, `stock`, `prescription` | Đã đăng nhập thì đọc được, chỉ nhà thuốc được ghi |
 | `Carts/<uid>` | `{drugId: số lượng}` | Chỉ chủ giỏ. Không cho thêm thuốc kê đơn |
@@ -158,6 +176,24 @@ flutter run -d chrome --web-port 8080 --dart-define=AI_CHAT_URL=http://localhost
 
 Phải dùng cổng `8080` vì CORS của webhook chỉ cho phép `localhost:8080`. Nếu không truyền `AI_CHAT_URL`, tab Trợ lý AI sẽ báo *chưa cấu hình*.
 
+### Chạy trên Android và iOS
+
+**Android** (Windows, macOS hoặc Linux): cần Java 17+ và Android SDK 36 (cài bằng Android Studio → SDK Manager), rồi chạy `flutter doctor --android-licenses`. Cắm điện thoại (bật *USB debugging*) hoặc mở emulator:
+
+```powershell
+flutter devices
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+flutter build apk --release --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai   # file: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**iOS**: chỉ build được trên **macOS** có Xcode (iOS 13+). Lần đầu chạy `cd ios; pod install`. Muốn cài lên iPhone thật thì mở `ios/Runner.xcworkspace` trong Xcode, chọn Team ở *Signing & Capabilities*, rồi:
+
+```bash
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+```
+
+Trên điện thoại, `AI_CHAT_URL` phải là địa chỉ `https` công khai: app chỉ chấp nhận `http` khi trỏ tới `localhost`, mà `localhost` trên điện thoại không phải máy tính của bạn. Bản release Android hiện ký bằng debug key, nên chỉ dùng để cài thử. Muốn đưa lên Google Play thì phải tạo keystore riêng.
+
 ### Dữ liệu thuốc
 
 ```powershell
@@ -175,6 +211,29 @@ Lệnh này nạp [data/drugs.json](data/drugs.json) vào `Drugs`. Thuốc trùn
 powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_UID> -Email <email>
 # Thu hồi quyền: thêm -Remove
 ```
+
+### Cấp tài khoản quản trị viên
+
+Nên dùng một tài khoản riêng: tài khoản quản trị viên chỉ thấy màn hình quản trị, kể cả khi tài khoản đó cũng là bác sĩ.
+
+1. Firebase Console → Authentication → **Add user**: nhập email và mật khẩu, rồi copy **User UID**.
+2. Chạy lệnh:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/add-admin.ps1 -Uid <USER_UID> -Email <email>
+# Thu hồi quyền: thêm -Remove
+```
+
+### Xác minh bác sĩ
+
+Bác sĩ tự đăng ký trong app, nhưng chỉ hiện với bệnh nhân sau khi được xác minh. Cách dễ nhất là dùng tab **Bác sĩ** của tài khoản quản trị viên (xem [Quản trị viên](#quản-trị-viên)). Nếu không dùng app, copy **User UID** của bác sĩ trong Firebase Console → Authentication rồi chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>
+# Bỏ xác minh: thêm -Remove
+```
+
+Sau khi deploy rules này lần đầu, các bác sĩ đã đăng ký từ trước cũng cần được xác minh như trên.
 
 ### Test
 
@@ -215,6 +274,26 @@ firebase deploy --only hosting --project doctor-app-df8ca
 ```
 
 Lệnh deploy database sẽ **ghi đè** rules đang có trên Firebase Console bằng nội dung file `database.rules.json`.
+
+Nếu database còn tin nhắn kiểu cũ (nằm thẳng dưới `Chat`), chạy script sau **trước** khi deploy rules. Script chuyển tin nhắn sang `Chat/<uidA_uidB>` và lưu bản sao vào `.local/`. Chạy lại nhiều lần vẫn an toàn.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
+```
+
+### API key của Firebase
+
+Các giá trị `apiKey` trong [lib/firebase_options.dart](lib/firebase_options.dart) là key client của Firebase. Chúng được thiết kế để công khai: bản web và file APK nào cũng chứa chúng, còn dữ liệu được bảo vệ bằng `database.rules.json` chứ không phải bằng việc giấu key. GitHub secret scanning vẫn sẽ cảnh báo. Hãy đóng các cảnh báo đó với lý do *false positive*.
+
+Để người khác không dùng key gọi các API Google tính phí, hãy giới hạn key trong [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials?project=doctor-app-df8ca):
+
+| Key | Application restrictions |
+|---|---|
+| Android | Android apps: `vn.doctorapp.app` + SHA-1 của từng khóa ký (`keytool -list -v -keystore $env:USERPROFILE\.android\debug.keystore -storepass android`) |
+| iOS | iOS apps: `vn.doctorapp.app` |
+| Web | Để None. Workflow n8n dùng key này từ server để gọi Firebase Auth, nên giới hạn theo website sẽ làm hỏng trợ lý AI |
+
+Ở mục **API restrictions** của cả ba key, chỉ cho phép Identity Toolkit API, Token Service API và Firebase Installations API.
 
 ### Đóng góp
 

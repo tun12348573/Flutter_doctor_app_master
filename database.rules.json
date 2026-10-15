@@ -7,13 +7,17 @@
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid == $uid",
-        ".validate": "newData.child('uid').val() == $uid"
+        ".validate": "newData.child('uid').val() == $uid && (newData.child('verified').val() == data.child('verified').val() || root.child('Admins').child(auth.uid).exists())",
+        "verified": {
+          ".write": "auth != null && root.child('Admins').child(auth.uid).exists() && data.parent().exists()",
+          ".validate": "newData.val() == true"
+        }
       }
     },
 
     "Patients": {
-      ".read": "auth != null",
       "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || root.child('Doctors').child(auth.uid).child('verified').val() == true)",
         ".write": "auth != null && auth.uid == $uid",
         ".validate": "newData.child('uid').val() == $uid"
       }
@@ -23,26 +27,34 @@
       ".indexOn": ["sender", "receiver"],
       ".read": "auth != null && ((query.orderByChild == 'sender' && query.equalTo == auth.uid) || (query.orderByChild == 'receiver' && query.equalTo == auth.uid))",
       "$id": {
-        ".write": "auth != null && newData.exists() && ((!data.exists() && newData.child('sender').val() == auth.uid && newData.child('status').val() == 'pending' && root.child('Doctors').child(newData.child('receiver').val()).exists()) || (data.exists() && data.child('receiver').val() == auth.uid && newData.child('sender').val() == data.child('sender').val() && newData.child('receiver').val() == data.child('receiver').val() && newData.child('id').val() == data.child('id').val() && newData.child('date').val() == data.child('date').val() && newData.child('time').val() == data.child('time').val() && newData.child('description').val() == data.child('description').val()))",
-        ".validate": "newData.hasChildren(['id', 'sender', 'receiver', 'date', 'time', 'description', 'status']) && newData.child('id').val() == $id"
+        ".write": "auth != null && newData.exists() && ((!data.exists() && newData.child('sender').val() == auth.uid && newData.child('status').val() == 'pending' && root.child('Doctors').child(newData.child('receiver').val()).child('verified').val() == true) || (data.exists() && data.child('receiver').val() == auth.uid && newData.child('sender').val() == data.child('sender').val() && newData.child('receiver').val() == data.child('receiver').val() && newData.child('id').val() == data.child('id').val() && newData.child('date').val() == data.child('date').val() && newData.child('time').val() == data.child('time').val() && newData.child('description').val() == data.child('description').val()))",
+        ".validate": "newData.hasChildren(['id', 'sender', 'receiver', 'date', 'time', 'description', 'status']) && newData.child('id').val() == $id && newData.child('status').isString() && newData.child('status').val().matches(/^(pending|Accepted|Rejected|Completed)$/)"
       }
     },
 
     "Chat": {
-      ".read": "auth != null",
-      "$id": {
-        ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid",
-        ".validate": "newData.hasChildren(['message', 'sender', 'receiver', 'timestamp']) && newData.child('message').isString() && newData.child('receiver').isString() && newData.child('timestamp').isString()"
+      "$chatId": {
+        ".read": "auth != null && ($chatId.beginsWith(auth.uid + '_') || $chatId.endsWith('_' + auth.uid))",
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid && newData.child('receiver').val() != auth.uid && ($chatId == auth.uid + '_' + newData.child('receiver').val() || $chatId == newData.child('receiver').val() + '_' + auth.uid) && ((root.child('Patients').child(auth.uid).exists() && root.child('Doctors').child(newData.child('receiver').val()).child('verified').val() == true) || (root.child('Doctors').child(auth.uid).child('verified').val() == true && root.child('Patients').child(newData.child('receiver').val()).exists()))",
+          ".validate": "newData.hasChildren(['message', 'sender', 'receiver', 'timestamp']) && newData.child('message').isString() && newData.child('receiver').isString() && newData.child('timestamp').isString()"
+        }
       }
     },
 
     "ChatList": {
-      ".read": "auth != null",
       "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
         "$partner": {
-          ".write": "auth != null && (auth.uid == $uid || auth.uid == $partner) && newData.exists()",
+          ".write": "auth != null && (auth.uid == $uid || auth.uid == $partner) && newData.exists() && (newData.parent().parent().parent().child('Chat').child($uid + '_' + $partner).exists() || newData.parent().parent().parent().child('Chat').child($partner + '_' + $uid).exists())",
           ".validate": "newData.hasChildren(['id']) && newData.child('id').val() == $partner"
         }
+      }
+    },
+
+    "Admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid"
       }
     },
 

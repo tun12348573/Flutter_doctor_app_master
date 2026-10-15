@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/widgets.dart';
+import '../admin/admin_home_page.dart';
 import '../doctor/doctor_home_page.dart';
 import '../patient/patient_home_page.dart';
 import '../pharmacist/pharmacist_home_page.dart';
@@ -7,6 +8,9 @@ import '../pharmacist/pharmacist_home_page.dart';
 /// Home screen for the signed-in user's role, or null when no profile exists.
 Future<Widget?> homeForUser(String uid) async {
   final database = FirebaseDatabase.instance.ref();
+  if ((await database.child('Admins').child(uid).get()).exists) {
+    return const AdminHomePage();
+  }
   if ((await database.child('Doctors').child(uid).get()).exists) {
     return const DoctorHomePage();
   }

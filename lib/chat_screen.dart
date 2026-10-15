@@ -4,6 +4,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'ui/app_widgets.dart';
 
+/// Conversation node under `Chat`: both uids in code-unit order, so either side gets the same id.
+String chatId(String a, String b) => a.compareTo(b) < 0 ? '${a}_$b' : '${b}_$a';
+
 class ChatScreen extends StatefulWidget {
   final String? doctorId;
   final String? doctorName;
@@ -22,6 +25,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   late final String _uid;
   late final String _partnerId;
+  late final DatabaseReference _chat;
   late Stream<DatabaseEvent> _messages;
 
   @override
@@ -29,14 +33,15 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _uid = FirebaseAuth.instance.currentUser!.uid;
     _partnerId = _uid == widget.doctorId ? widget.patientId! : widget.doctorId!;
-    _messages = FirebaseDatabase.instance.ref('Chat').onValue;
+    _chat = FirebaseDatabase.instance.ref('Chat/${chatId(_uid, _partnerId)}');
+    _messages = _chat.onValue;
   }
 
   Future<void> _send(String message) async {
     final root = FirebaseDatabase.instance.ref();
-    final id = root.child('Chat').push().key!;
+    final id = _chat.push().key!;
     await root.update({
-      'Chat/$id': {
+      '${_chat.path}/$id': {
         'message': message,
         'receiver': _partnerId,
         'sender': _uid,
@@ -69,10 +74,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                   title: context.tr('Unable to load messages'),
                                   message: context.tr(
                                       'Check your connection and try again.'),
-                                  onRetry: () => setState(() => _messages =
-                                      FirebaseDatabase.instance
-                                          .ref('Chat')
-                                          .onValue));
+                                  onRetry: () => setState(
+                                      () => _messages = _chat.onValue));
                             }
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -84,13 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 in snapshot.data?.snapshot.children ??
                                     <DataSnapshot>[]) {
                               final value = item.value;
-                              if (value is Map &&
-                                  ((value['sender'] == _uid &&
-                                          value['receiver'] == _partnerId) ||
-                                      (value['sender'] == _partnerId &&
-                                          value['receiver'] == _uid))) {
-                                messages.add(value);
-                              }
+                              if (value is Map) messages.add(value);
                             }
                             messages.sort((a, b) => b['timestamp']
                                 .toString()

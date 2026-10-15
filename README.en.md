@@ -9,7 +9,7 @@ DoctorApp is an appointment booking and medicine ordering app that connects **pa
 
 Doctors review appointments. The pharmacy processes orders and manages inventory. The interface is available in English and Vietnamese.
 
-- Web app: https://doctor-app-df8ca.web.app
+- Web app: https://doctor-app-df8ca.web.app. Also builds for Android and iOS (see [Run on Android and iOS](#run-on-android-and-ios)).
 - The AI assistant only works while the AI server is on (see [AI assistant](#ai-assistant)).
 - Medicine data is **demo data** (written in Vietnamese). Read the package leaflet and ask a pharmacist before taking any medicine.
 
@@ -20,7 +20,7 @@ Doctors review appointments. The pharmacy processes orders and manages inventory
 - **Language:** use the **EN / VI** switch at the corner of the screen.
 - **Dark mode:** the app follows the light/dark setting of your device or browser.
 - **Sign up:** choose *Patient* or *Doctor*, then enter your name, email, password (at least 6 characters), phone number and city. You can tap **Use current location** to save your coordinates. Doctors also enter their specialty, qualification and years of experience.
-- **Pharmacist** accounts cannot sign up themselves; an administrator grants them (see [Granting a pharmacist account](#granting-a-pharmacist-account)).
+- **Pharmacist** and **administrator** accounts cannot sign up themselves; they are granted with a script (see [Granting a pharmacist account](#granting-a-pharmacist-account) and [Granting an administrator account](#granting-an-administrator-account)).
 - **Sign in / out:** sign in with email and password; the app opens the screens for your role. **Sign out** is in the *My account* tab.
 
 ### Patients
@@ -62,7 +62,9 @@ A doctor's profile also has these buttons:
 |---|---|
 | **Appointments** | View patients' appointment requests. Tap a request to set it to *Accepted*, *Rejected* or *Completed*, then tap **Save status**. |
 | **Messages** | Reply to patients. |
-| **My account** | View your profile (email, phone, city, qualification, experience); sign out. |
+| **My account** | View your profile (email, phone, city, qualification, experience) and verification status; sign out. |
+
+A newly registered doctor sees *Awaiting verification: patients cannot find you yet*. Doctors appear in *Find care*, receive appointments and can read patient profiles only after an administrator verifies them (see [Administrators](#administrators)). The status then changes to *Verified*.
 
 ### Pharmacists
 
@@ -84,6 +86,15 @@ A doctor's profile also has these buttons:
 - Tap a medicine to edit its details. Stock is not edited there.
 - Tap **Add medicine** to create a new one with its initial stock, and mark *Prescription only* if needed.
 
+### Administrators
+
+| Tab | What it does |
+|---|---|
+| **Doctors** | All doctors, *Awaiting verification* first, with email, specialty, qualification and experience. Tap **Verify** (then confirm) or **Remove verification**. |
+| **My account** | Account email; sign out. |
+
+Check a doctor's qualification before tapping **Verify**: a verified doctor can read every patient profile.
+
 ## For developers
 
 ### Tech stack
@@ -91,12 +102,13 @@ A doctor's profile also has these buttons:
 | Layer | Technology |
 |---|---|
 | App | Flutter 3.38 / Dart ≥3.4, Material 3 (light + dark theme), Lexend + Noto Sans fonts (Vietnamese glyphs, bundled), `flutter_localizations` + `intl` |
-| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Storage, Hosting |
-| Device | `location`, `url_launcher`, `image_picker`, `google_maps_flutter` |
+| Backend | Firebase project `doctor-app-df8ca`: Authentication, Realtime Database (rules in [database.rules.json](database.rules.json)), Hosting |
+| Device | `location`, `url_launcher` |
+| Mobile | Android: AGP 8.11, Kotlin 2.2, Gradle 8.14, Java 17+, Android SDK 36. iOS 13+. App ID `vn.doctorapp.app` |
 | AI assistant | n8n 2.42.7 (webhook) → Ollama `qwen3:1.7b`, exposed to the internet with Tailscale Funnel |
 | Rules tests | Firebase Database Emulator (needs Java) + `@firebase/rules-unit-testing` |
 
-Only **web** is configured in [lib/firebase_options.dart](lib/firebase_options.dart). To run on Android or iOS, run `flutterfire configure` first.
+Web, Android and iOS are all configured in [lib/firebase_options.dart](lib/firebase_options.dart); no `google-services.json` or `GoogleService-Info.plist` is needed.
 
 ### Project layout
 
@@ -104,12 +116,14 @@ Only **web** is configured in [lib/firebase_options.dart](lib/firebase_options.d
 lib/
   main.dart            Firebase init, theme, locale
   splash_screen.dart   Auth check, routes to the home screen for the user's role
-  auth/                Sign in, sign up, role_home.dart (Doctors → Pharmacists → Patients)
+  auth/                Sign in, sign up, role_home.dart (Admins → Doctors → Pharmacists → Patients),
+                       account_page.dart (account tab for pharmacists and admins)
   patient/             Patient home and chat list
   doctor/              Doctor list and profile, appointments, models (Doctor, Patient, Booking)
   pharmacy/            Patient pharmacy: catalog, details, cart, my orders,
                        PharmacyStore (Firebase reads/writes), Drug and DrugOrder models
   pharmacist/          Pharmacist role: orders, inventory, add/edit medicine form
+  admin/               Administrator role: verify doctors
   ai/                  AI assistant: AiChatSession (calls the webhook, sends drugId), AiChatPage
   chat_screen.dart     One-to-one chat
   l10n/app_strings.dart  English → Vietnamese strings, context.tr(), EN/VI switch
@@ -118,7 +132,8 @@ assets/fonts/          Lexend, Noto Sans (TTF) and their OFL licences
 data/drugs.json        41 demo medicines
 database.rules.json    Realtime Database security rules
 n8n/                   AI workflow, workflow test, detailed guide
-scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1
+scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
+                       migrate-chat.ps1, verify-doctor.ps1, add-admin.ps1
 test/                  Widget and unit tests; test/rules/ tests the security rules
 ```
 
@@ -126,9 +141,12 @@ Realtime Database nodes:
 
 | Node | Contents | Access |
 |---|---|---|
-| `Doctors`, `Patients` | User profiles | Readable when signed in; only the owner writes |
-| `Requests` | Appointments | Patient creates, doctor updates status |
-| `Chat`, `ChatList` | Messages | Readable when signed in; the sender creates messages |
+| `Doctors` | Doctor profiles, `verified` | Readable when signed in. Only the owner writes the profile; only admins set or remove `verified` |
+| `Admins/<uid>` | Administrator role marker | Nobody can write from the app |
+| `Patients/<uid>` | Patient profiles | The owner and verified doctors read; only the owner writes |
+| `Requests` | Appointments | Patient creates, only for verified doctors. Doctor updates status (`Accepted`, `Rejected`, `Completed`) |
+| `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it. The sender creates messages, only between a patient and a verified doctor |
+| `ChatList/<uid>` | Who each user has chatted with | Only the owner reads. Entries are written with a message and need a real conversation |
 | `Pharmacists/<uid>` | Pharmacist role marker | Nobody can write from the app |
 | `Drugs/<id>` | Medicine info, `price`, `stock`, `prescription` | Readable when signed in; only pharmacists write |
 | `Carts/<uid>` | `{drugId: quantity}` | Owner only; prescription medicines rejected |
@@ -158,6 +176,24 @@ flutter run -d chrome --web-port 8080 --dart-define=AI_CHAT_URL=http://localhost
 
 Use port `8080`, because the webhook's CORS settings only allow `localhost:8080`. If `AI_CHAT_URL` is not set, the AI assistant tab shows *not configured*.
 
+### Run on Android and iOS
+
+**Android** (Windows, macOS or Linux): install Java 17+ and Android SDK 36 (Android Studio → SDK Manager), then run `flutter doctor --android-licenses`. Connect a phone with *USB debugging* on, or start an emulator:
+
+```powershell
+flutter devices
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+flutter build apk --release --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai   # output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**iOS**: builds only on **macOS** with Xcode (iOS 13+). The first time, run `cd ios; pod install`. To install on a real iPhone, open `ios/Runner.xcworkspace` in Xcode, pick your Team under *Signing & Capabilities*, then:
+
+```bash
+flutter run -d <device-id> --dart-define=AI_CHAT_URL=https://doctorapp-ai.tail6390aa.ts.net/webhook/doctorapp-ai
+```
+
+On a phone, `AI_CHAT_URL` must be a public `https` address: the app accepts `http` only for `localhost`, and `localhost` on a phone is not your computer. Android release builds are still signed with the debug key, so they are for testing only. Publishing to Google Play needs your own keystore.
+
 ### Medicine data
 
 ```powershell
@@ -175,6 +211,29 @@ This loads [data/drugs.json](data/drugs.json) into `Drugs`. Medicines with the s
 powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_UID> -Email <email>
 # Revoke: add -Remove
 ```
+
+### Granting an administrator account
+
+Use a separate account: an administrator only sees the administrator screens, even if the same account is also a doctor.
+
+1. Firebase Console → Authentication → **Add user**: enter an email and password, then copy the **User UID**.
+2. Run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/add-admin.ps1 -Uid <USER_UID> -Email <email>
+# Revoke: add -Remove
+```
+
+### Verifying a doctor
+
+Doctors register in the app, but patients only see them once they are verified. The easiest way is the **Doctors** tab of an administrator account (see [Administrators](#administrators)). Without the app, copy the doctor's **User UID** from Firebase Console → Authentication and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>
+# Un-verify: add -Remove
+```
+
+After deploying these rules for the first time, doctors who registered earlier must be verified the same way.
 
 ### Tests
 
@@ -215,6 +274,26 @@ firebase deploy --only hosting --project doctor-app-df8ca
 ```
 
 Deploying the database **replaces** the rules in Firebase Console with `database.rules.json`.
+
+If the database still has old-style messages (directly under `Chat`), run this **before** deploying the rules. It moves them to `Chat/<uidA_uidB>` and saves a backup in `.local/`. It is safe to run more than once.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
+```
+
+### Firebase API keys
+
+The `apiKey` values in [lib/firebase_options.dart](lib/firebase_options.dart) are Firebase client keys. They are meant to be public: every web build and APK contains them, and data is protected by `database.rules.json`, not by hiding the keys. GitHub secret scanning still flags them; close those alerts as *false positive*.
+
+To stop other people using the keys for paid Google APIs, restrict them in [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials?project=doctor-app-df8ca):
+
+| Key | Application restrictions |
+|---|---|
+| Android | Android apps: `vn.doctorapp.app` + the SHA-1 of each signing key (`keytool -list -v -keystore $env:USERPROFILE\.android\debug.keystore -storepass android`) |
+| iOS | iOS apps: `vn.doctorapp.app` |
+| Web | None. The n8n workflow calls Firebase Auth with this key from the server, so a website restriction would break the AI assistant |
+
+For **API restrictions** on all three, allow only Identity Toolkit API, Token Service API and Firebase Installations API.
 
 ### Contributing
 

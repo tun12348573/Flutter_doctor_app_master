@@ -20,7 +20,7 @@ Doctors review appointments. The pharmacy processes orders and manages inventory
 - **Language:** use the **EN / VI** switch at the corner of the screen.
 - **Dark mode:** the app follows the light/dark setting of your device or browser.
 - **Sign up:** choose *Patient* or *Doctor*, then enter your name, email, password (at least 6 characters), phone number and city. You can tap **Use current location** to save your coordinates. Doctors also enter their specialty, qualification and years of experience.
-- **Pharmacist** accounts cannot sign up themselves; an administrator grants them (see [Granting a pharmacist account](#granting-a-pharmacist-account)).
+- **Pharmacist** and **administrator** accounts cannot sign up themselves; they are granted with a script (see [Granting a pharmacist account](#granting-a-pharmacist-account) and [Granting an administrator account](#granting-an-administrator-account)).
 - **Sign in / out:** sign in with email and password; the app opens the screens for your role. **Sign out** is in the *My account* tab.
 
 ### Patients
@@ -64,7 +64,7 @@ A doctor's profile also has these buttons:
 | **Messages** | Reply to patients. |
 | **My account** | View your profile (email, phone, city, qualification, experience) and verification status; sign out. |
 
-A newly registered doctor sees *Awaiting verification: patients cannot find you yet*. Doctors appear in *Find care*, receive appointments and can read patient profiles only after an administrator verifies them (see [Verifying a doctor](#verifying-a-doctor)). The status then changes to *Verified*.
+A newly registered doctor sees *Awaiting verification: patients cannot find you yet*. Doctors appear in *Find care*, receive appointments and can read patient profiles only after an administrator verifies them (see [Administrators](#administrators)). The status then changes to *Verified*.
 
 ### Pharmacists
 
@@ -85,6 +85,15 @@ A newly registered doctor sees *Awaiting verification: patients cannot find you 
   - **Set stock:** sets the exact count.
 - Tap a medicine to edit its details. Stock is not edited there.
 - Tap **Add medicine** to create a new one with its initial stock, and mark *Prescription only* if needed.
+
+### Administrators
+
+| Tab | What it does |
+|---|---|
+| **Doctors** | All doctors, *Awaiting verification* first, with email, specialty, qualification and experience. Tap **Verify** (then confirm) or **Remove verification**. |
+| **My account** | Account email; sign out. |
+
+Check a doctor's qualification before tapping **Verify**: a verified doctor can read every patient profile.
 
 ## For developers
 
@@ -107,12 +116,14 @@ Web, Android and iOS are all configured in [lib/firebase_options.dart](lib/fireb
 lib/
   main.dart            Firebase init, theme, locale
   splash_screen.dart   Auth check, routes to the home screen for the user's role
-  auth/                Sign in, sign up, role_home.dart (Doctors → Pharmacists → Patients)
+  auth/                Sign in, sign up, role_home.dart (Admins → Doctors → Pharmacists → Patients),
+                       account_page.dart (account tab for pharmacists and admins)
   patient/             Patient home and chat list
   doctor/              Doctor list and profile, appointments, models (Doctor, Patient, Booking)
   pharmacy/            Patient pharmacy: catalog, details, cart, my orders,
                        PharmacyStore (Firebase reads/writes), Drug and DrugOrder models
   pharmacist/          Pharmacist role: orders, inventory, add/edit medicine form
+  admin/               Administrator role: verify doctors
   ai/                  AI assistant: AiChatSession (calls the webhook, sends drugId), AiChatPage
   chat_screen.dart     One-to-one chat
   l10n/app_strings.dart  English → Vietnamese strings, context.tr(), EN/VI switch
@@ -122,7 +133,7 @@ data/drugs.json        41 demo medicines
 database.rules.json    Realtime Database security rules
 n8n/                   AI workflow, workflow test, detailed guide
 scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
-                       migrate-chat.ps1, verify-doctor.ps1
+                       migrate-chat.ps1, verify-doctor.ps1, add-admin.ps1
 test/                  Widget and unit tests; test/rules/ tests the security rules
 ```
 
@@ -130,7 +141,8 @@ Realtime Database nodes:
 
 | Node | Contents | Access |
 |---|---|---|
-| `Doctors` | Doctor profiles, `verified` | Readable when signed in. Only the owner writes, and cannot change `verified` |
+| `Doctors` | Doctor profiles, `verified` | Readable when signed in. Only the owner writes the profile; only admins set or remove `verified` |
+| `Admins/<uid>` | Administrator role marker | Nobody can write from the app |
 | `Patients/<uid>` | Patient profiles | The owner and verified doctors read; only the owner writes |
 | `Requests` | Appointments | Patient creates, only for verified doctors. Doctor updates status (`Accepted`, `Rejected`, `Completed`) |
 | `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it; the sender creates messages |
@@ -200,9 +212,21 @@ powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_U
 # Revoke: add -Remove
 ```
 
+### Granting an administrator account
+
+Use a separate account: an administrator only sees the administrator screens, even if the same account is also a doctor.
+
+1. Firebase Console → Authentication → **Add user**: enter an email and password, then copy the **User UID**.
+2. Run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/add-admin.ps1 -Uid <USER_UID> -Email <email>
+# Revoke: add -Remove
+```
+
 ### Verifying a doctor
 
-Doctors register in the app, but patients only see them once they are verified. Check the doctor's credentials, copy their **User UID** from Firebase Console → Authentication, then run:
+Doctors register in the app, but patients only see them once they are verified. The easiest way is the **Doctors** tab of an administrator account (see [Administrators](#administrators)). Without the app, copy the doctor's **User UID** from Firebase Console → Authentication and run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>

@@ -20,7 +20,7 @@ Bác sĩ duyệt lịch hẹn. Nhà thuốc xử lý đơn hàng và quản lý 
 - **Đổi ngôn ngữ:** bấm nút **EN / VI** ở góc màn hình.
 - **Chế độ tối:** app tự theo cài đặt sáng/tối của thiết bị hoặc trình duyệt.
 - **Đăng ký:** chọn vai trò *Bệnh nhân* hoặc *Bác sĩ*, rồi nhập họ tên, email, mật khẩu (tối thiểu 6 ký tự), số điện thoại và thành phố. Có thể bấm **Dùng vị trí hiện tại** để lưu tọa độ. Bác sĩ phải nhập thêm chuyên khoa, bằng cấp và số năm kinh nghiệm.
-- Tài khoản **nhà thuốc** không tự đăng ký được, do quản trị viên cấp (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc)).
+- Tài khoản **nhà thuốc** và **quản trị viên** không tự đăng ký được, mà được cấp bằng script (xem [Cấp tài khoản nhà thuốc](#cấp-tài-khoản-nhà-thuốc) và [Cấp tài khoản quản trị viên](#cấp-tài-khoản-quản-trị-viên)).
 - **Đăng nhập / đăng xuất:** đăng nhập bằng email và mật khẩu, app tự chuyển đến giao diện theo vai trò. Nút **Đăng xuất** nằm ở tab *Tài khoản*.
 
 ### Bệnh nhân
@@ -64,7 +64,7 @@ Trong hồ sơ bác sĩ còn có các nút:
 | **Tin nhắn** | Trả lời tin nhắn của bệnh nhân. |
 | **Tài khoản** | Xem hồ sơ (email, điện thoại, thành phố, bằng cấp, kinh nghiệm), trạng thái xác minh, đăng xuất. |
 
-Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn*. Bác sĩ chỉ xuất hiện trong *Tìm bác sĩ*, nhận được lịch hẹn và xem được hồ sơ bệnh nhân sau khi quản trị viên xác minh (xem [Xác minh bác sĩ](#xác-minh-bác-sĩ)). Khi đó trạng thái đổi thành *Đã xác minh*.
+Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bệnh nhân chưa tìm thấy bạn*. Bác sĩ chỉ xuất hiện trong *Tìm bác sĩ*, nhận được lịch hẹn và xem được hồ sơ bệnh nhân sau khi quản trị viên xác minh (xem [Quản trị viên](#quản-trị-viên)). Khi đó trạng thái đổi thành *Đã xác minh*.
 
 ### Nhà thuốc
 
@@ -85,6 +85,15 @@ Tài khoản bác sĩ mới đăng ký sẽ hiện *Đang chờ xác minh: bện
   - **Chỉnh tồn kho:** đặt lại đúng số tồn thực tế.
 - Bấm vào một thuốc để sửa thông tin. Số tồn không sửa ở đây.
 - Nút **Thêm thuốc** để thêm thuốc mới, nhập tồn kho ban đầu và đánh dấu *Thuốc kê đơn* nếu cần.
+
+### Quản trị viên
+
+| Tab | Chức năng |
+|---|---|
+| **Bác sĩ** | Danh sách mọi bác sĩ, ai *Đang chờ xác minh* xếp lên đầu, kèm email, chuyên khoa, bằng cấp và kinh nghiệm. Bấm **Xác minh** (rồi xác nhận) hoặc **Bỏ xác minh**. |
+| **Tài khoản** | Email tài khoản, đăng xuất. |
+
+Hãy kiểm tra bằng cấp của bác sĩ trước khi bấm **Xác minh**: bác sĩ đã xác minh xem được hồ sơ của mọi bệnh nhân.
 
 ## Dành cho dev
 
@@ -107,12 +116,14 @@ Web, Android và iOS đều đã được cấu hình trong [lib/firebase_option
 lib/
   main.dart            Khởi tạo Firebase, theme, ngôn ngữ
   splash_screen.dart   Kiểm tra đăng nhập, chuyển đến màn hình chính theo vai trò
-  auth/                Đăng nhập, đăng ký, role_home.dart (Doctors → Pharmacists → Patients)
+  auth/                Đăng nhập, đăng ký, role_home.dart (Admins → Doctors → Pharmacists → Patients),
+                       account_page.dart (tab tài khoản cho nhà thuốc và quản trị viên)
   patient/             Màn hình chính và danh sách chat của bệnh nhân
   doctor/              Danh sách và hồ sơ bác sĩ, lịch hẹn, model (Doctor, Patient, Booking)
   pharmacy/            Nhà thuốc cho bệnh nhân: danh mục, chi tiết, giỏ hàng, đơn của tôi,
                        PharmacyStore (đọc/ghi Firebase), model Drug và DrugOrder
   pharmacist/          Vai trò nhà thuốc: đơn hàng, kho, form thêm/sửa thuốc
+  admin/               Vai trò quản trị viên: xác minh bác sĩ
   ai/                  Trợ lý AI: AiChatSession (gọi webhook, kèm drugId), AiChatPage
   chat_screen.dart     Màn hình chat 1-1
   l10n/app_strings.dart  Bảng dịch Anh → Việt, context.tr(), nút EN/VI
@@ -122,7 +133,7 @@ data/drugs.json        41 thuốc minh họa
 database.rules.json    Security rules của Realtime Database
 n8n/                   Workflow AI, test workflow, hướng dẫn chi tiết
 scripts/               start-n8n.ps1, register-autostart.ps1, seed-drugs.ps1, add-pharmacist.ps1,
-                       migrate-chat.ps1, verify-doctor.ps1
+                       migrate-chat.ps1, verify-doctor.ps1, add-admin.ps1
 test/                  Test widget và unit; test/rules/ là test security rules
 ```
 
@@ -130,7 +141,8 @@ Các nhánh dữ liệu trong Realtime Database:
 
 | Nhánh | Nội dung | Quyền |
 |---|---|---|
-| `Doctors` | Hồ sơ bác sĩ, `verified` | Đã đăng nhập thì đọc được. Chỉ chủ hồ sơ được ghi, nhưng không tự sửa được `verified` |
+| `Doctors` | Hồ sơ bác sĩ, `verified` | Đã đăng nhập thì đọc được. Chỉ chủ hồ sơ được ghi hồ sơ; chỉ quản trị viên đặt hoặc bỏ `verified` |
+| `Admins/<uid>` | Đánh dấu tài khoản quản trị viên | Không ai ghi được từ app |
 | `Patients/<uid>` | Hồ sơ bệnh nhân | Chủ hồ sơ và bác sĩ đã xác minh đọc được, chỉ chủ hồ sơ được ghi |
 | `Requests` | Lịch hẹn | Bệnh nhân tạo, chỉ gửi được cho bác sĩ đã xác minh. Bác sĩ đổi trạng thái (`Accepted`, `Rejected`, `Completed`) |
 | `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được, người gửi tạo tin nhắn |
@@ -200,9 +212,21 @@ powershell -ExecutionPolicy Bypass -File scripts/add-pharmacist.ps1 -Uid <USER_U
 # Thu hồi quyền: thêm -Remove
 ```
 
+### Cấp tài khoản quản trị viên
+
+Nên dùng một tài khoản riêng: tài khoản quản trị viên chỉ thấy màn hình quản trị, kể cả khi tài khoản đó cũng là bác sĩ.
+
+1. Firebase Console → Authentication → **Add user**: nhập email và mật khẩu, rồi copy **User UID**.
+2. Chạy lệnh:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/add-admin.ps1 -Uid <USER_UID> -Email <email>
+# Thu hồi quyền: thêm -Remove
+```
+
 ### Xác minh bác sĩ
 
-Bác sĩ tự đăng ký trong app, nhưng chỉ hiện với bệnh nhân sau khi được xác minh. Kiểm tra bằng cấp của bác sĩ, copy **User UID** của họ trong Firebase Console → Authentication, rồi chạy:
+Bác sĩ tự đăng ký trong app, nhưng chỉ hiện với bệnh nhân sau khi được xác minh. Cách dễ nhất là dùng tab **Bác sĩ** của tài khoản quản trị viên (xem [Quản trị viên](#quản-trị-viên)). Nếu không dùng app, copy **User UID** của bác sĩ trong Firebase Console → Authentication rồi chạy:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/verify-doctor.ps1 -Uid <USER_UID>

@@ -13,6 +13,7 @@ class Doctor {
   final double longitude;
   final int numberOfReviews;
   final int totalReviews;
+  final bool verified;
 
   Doctor({
     required this.uid,
@@ -29,6 +30,7 @@ class Doctor {
     required this.longitude,
     required this.numberOfReviews,
     required this.totalReviews,
+    this.verified = false,
   });
 
   factory Doctor.fromMap(Map<dynamic, dynamic> map, String uid) {
@@ -47,6 +49,7 @@ class Doctor {
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
       numberOfReviews: map['numberOfReviews'],
       totalReviews: map['totalReviews'],
+      verified: map['verified'] == true,
     );
   }
 }

@@ -51,6 +51,19 @@ describe('Doctors and patients', () => {
     await assertFails(set(ref(db('drv'), 'Doctors/drv'), profile('drv')));
     await assertSucceeds(update(ref(db('drv'), 'Doctors/drv'), {firstName: 'Lan'}));
   });
+  test('only admins verify or un-verify doctors, and nothing else', async () => {
+    await env.withSecurityRulesDisabled(ctx => set(ref(ctx.database(), 'Admins/boss'), {email: 'b@x.vn'}));
+    await assertFails(set(ref(db('pharma'), 'Doctors/drnew/verified'), true));
+    await assertFails(set(ref(db('drnew'), 'Doctors/drnew/verified'), true));
+    await assertFails(set(ref(db('boss'), 'Doctors/drnew/verified'), 'yes'));
+    await assertFails(set(ref(db('boss'), 'Doctors/ghost/verified'), true));
+    await assertFails(set(ref(db('boss'), 'Doctors/drnew/firstName'), 'X'));
+    await assertSucceeds(set(ref(db('boss'), 'Doctors/drnew/verified'), true));
+    await assertSucceeds(remove(ref(db('boss'), 'Doctors/drv/verified')));
+    await assertFails(set(ref(db('boss'), 'Admins/boss2'), {email: 'x'}));
+    await assertSucceeds(get(ref(db('boss'), 'Admins/boss')));
+    await assertFails(get(ref(db('alice'), 'Admins/boss')));
+  });
   test('only the patient and verified doctors read a patient profile', async () => {
     await assertSucceeds(get(ref(db('alice'), 'Patients/alice')));
     await assertSucceeds(get(ref(db('drv'), 'Patients/alice')));

@@ -36,7 +36,7 @@
       "$chatId": {
         ".read": "auth != null && ($chatId.beginsWith(auth.uid + '_') || $chatId.endsWith('_' + auth.uid))",
         "$id": {
-          ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid && newData.child('receiver').val() != auth.uid && ($chatId == auth.uid + '_' + newData.child('receiver').val() || $chatId == newData.child('receiver').val() + '_' + auth.uid)",
+          ".write": "auth != null && !data.exists() && newData.child('sender').val() == auth.uid && newData.child('receiver').val() != auth.uid && ($chatId == auth.uid + '_' + newData.child('receiver').val() || $chatId == newData.child('receiver').val() + '_' + auth.uid) && ((root.child('Patients').child(auth.uid).exists() && root.child('Doctors').child(newData.child('receiver').val()).child('verified').val() == true) || (root.child('Doctors').child(auth.uid).child('verified').val() == true && root.child('Patients').child(newData.child('receiver').val()).exists()))",
           ".validate": "newData.hasChildren(['message', 'sender', 'receiver', 'timestamp']) && newData.child('message').isString() && newData.child('receiver').isString() && newData.child('timestamp').isString()"
         }
       }
@@ -46,7 +46,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid == $uid",
         "$partner": {
-          ".write": "auth != null && (auth.uid == $uid || auth.uid == $partner) && newData.exists()",
+          ".write": "auth != null && (auth.uid == $uid || auth.uid == $partner) && newData.exists() && (newData.parent().parent().parent().child('Chat').child($uid + '_' + $partner).exists() || newData.parent().parent().parent().child('Chat').child($partner + '_' + $uid).exists())",
           ".validate": "newData.hasChildren(['id']) && newData.child('id').val() == $partner"
         }
       }

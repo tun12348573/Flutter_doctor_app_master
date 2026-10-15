@@ -145,8 +145,8 @@ Realtime Database nodes:
 | `Admins/<uid>` | Administrator role marker | Nobody can write from the app |
 | `Patients/<uid>` | Patient profiles | The owner and verified doctors read; only the owner writes |
 | `Requests` | Appointments | Patient creates, only for verified doctors. Doctor updates status (`Accepted`, `Rejected`, `Completed`) |
-| `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it; the sender creates messages |
-| `ChatList/<uid>` | Who each user has chatted with | Only the owner reads |
+| `Chat/<uidA_uidB>` | One conversation's messages (the two uids in sorted order) | Only the two participants read it. The sender creates messages, only between a patient and a verified doctor |
+| `ChatList/<uid>` | Who each user has chatted with | Only the owner reads. Entries are written with a message and need a real conversation |
 | `Pharmacists/<uid>` | Pharmacist role marker | Nobody can write from the app |
 | `Drugs/<id>` | Medicine info, `price`, `stock`, `prescription` | Readable when signed in; only pharmacists write |
 | `Carts/<uid>` | `{drugId: quantity}` | Owner only; prescription medicines rejected |

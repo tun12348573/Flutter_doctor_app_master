@@ -145,8 +145,8 @@ Các nhánh dữ liệu trong Realtime Database:
 | `Admins/<uid>` | Đánh dấu tài khoản quản trị viên | Không ai ghi được từ app |
 | `Patients/<uid>` | Hồ sơ bệnh nhân | Chủ hồ sơ và bác sĩ đã xác minh đọc được, chỉ chủ hồ sơ được ghi |
 | `Requests` | Lịch hẹn | Bệnh nhân tạo, chỉ gửi được cho bác sĩ đã xác minh. Bác sĩ đổi trạng thái (`Accepted`, `Rejected`, `Completed`) |
-| `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được, người gửi tạo tin nhắn |
-| `ChatList/<uid>` | Danh sách người đã nhắn tin | Chỉ chủ danh sách đọc được |
+| `Chat/<uidA_uidB>` | Tin nhắn của một cuộc hội thoại (hai uid xếp theo thứ tự) | Chỉ hai người trong cuộc đọc được. Người gửi tạo tin nhắn, chỉ giữa bệnh nhân và bác sĩ đã xác minh |
+| `ChatList/<uid>` | Danh sách người đã nhắn tin | Chỉ chủ danh sách đọc được. Mục mới được ghi cùng tin nhắn và phải có cuộc hội thoại thật |
 | `Pharmacists/<uid>` | Đánh dấu tài khoản nhà thuốc | Không ai ghi được từ app |
 | `Drugs/<id>` | Thông tin thuốc, `price`, `stock`, `prescription` | Đã đăng nhập thì đọc được, chỉ nhà thuốc được ghi |
 | `Carts/<uid>` | `{drugId: số lượng}` | Chỉ chủ giỏ. Không cho thêm thuốc kê đơn |

@@ -77,30 +77,51 @@ describe('Doctors and patients', () => {
     await assertFails(update(ref(db('drv'), 'Requests/r1'), {status: 'Paid'}));
     await assertSucceeds(update(ref(db('drv'), 'Requests/r1'), {status: 'Accepted'}));
   });
-  test('each user reads only their own chat list', async () => {
-    await assertSucceeds(set(ref(db('alice'), 'ChatList/alice/drv'), {id: 'drv'}));
-    await assertSucceeds(get(ref(db('alice'), 'ChatList/alice')));
-    await assertFails(get(ref(db('bob'), 'ChatList/alice')));
-    await assertFails(get(ref(db('bob'), 'ChatList')));
-  });
 });
 
 describe('Chat', () => {
   const msg = (sender, receiver) => ({message: 'hi', sender, receiver, timestamp: '2026-01-01T00:00:00'});
-  test('only the two participants read a conversation', async () => {
-    await assertSucceeds(set(ref(db('alice'), 'Chat/alice_bob/m1'), msg('alice', 'bob')));
-    await assertSucceeds(get(ref(db('alice'), 'Chat/alice_bob')));
-    await assertSucceeds(get(ref(db('bob'), 'Chat/alice_bob')));
-    await assertFails(get(ref(db('eve'), 'Chat/alice_bob')));
+  // Same multi-path write as ChatScreen._send.
+  const send = (sender, receiver, chat, id = 'm1') => update(ref(db(sender)), {
+    [`Chat/${chat}/${id}`]: msg(sender, receiver),
+    [`ChatList/${sender}/${receiver}`]: {id: receiver},
+    [`ChatList/${receiver}/${sender}`]: {id: sender},
+  });
+  beforeEach(() => env.withSecurityRulesDisabled(async ctx => {
+    const admin = ctx.database();
+    await set(ref(admin, 'Doctors/drbob'), {uid: 'drbob', verified: true});
+    await set(ref(admin, 'Doctors/drnew'), {uid: 'drnew'});
+    await set(ref(admin, 'Patients/alice'), {uid: 'alice'});
+    await set(ref(admin, 'Patients/eve'), {uid: 'eve'});
+  }));
+  test('only the two participants read a conversation and chat list', async () => {
+    await assertSucceeds(send('alice', 'drbob', 'alice_drbob'));
+    await assertSucceeds(get(ref(db('alice'), 'Chat/alice_drbob')));
+    await assertSucceeds(get(ref(db('drbob'), 'Chat/alice_drbob')));
+    await assertFails(get(ref(db('eve'), 'Chat/alice_drbob')));
     await assertFails(get(ref(db('eve'), 'Chat')));
-    await assertFails(get(ref(db('ali'), 'Chat/alice_bob')));
+    await assertFails(get(ref(db('ali'), 'Chat/alice_drbob')));
+    await assertSucceeds(get(ref(db('alice'), 'ChatList/alice')));
+    await assertFails(get(ref(db('eve'), 'ChatList/alice')));
+    await assertFails(get(ref(db('eve'), 'ChatList')));
   });
   test('messages cannot be forged, misfiled or edited', async () => {
-    await assertFails(set(ref(db('eve'), 'Chat/alice_bob/m2'), msg('alice', 'bob')));
-    await assertFails(set(ref(db('eve'), 'Chat/alice_bob/m2'), msg('eve', 'bob')));
-    await assertFails(set(ref(db('alice'), 'Chat/alice_alice/m2'), msg('alice', 'alice')));
-    await assertSucceeds(set(ref(db('bob'), 'Chat/alice_bob/m2'), msg('bob', 'alice')));
-    await assertFails(set(ref(db('bob'), 'Chat/alice_bob/m2'), msg('bob', 'alice')));
+    await assertFails(set(ref(db('eve'), 'Chat/alice_drbob/m2'), msg('alice', 'drbob')));
+    await assertFails(set(ref(db('eve'), 'Chat/alice_drbob/m2'), msg('eve', 'drbob')));
+    await assertSucceeds(set(ref(db('drbob'), 'Chat/alice_drbob/m2'), msg('drbob', 'alice')));
+    await assertFails(set(ref(db('drbob'), 'Chat/alice_drbob/m2'), msg('drbob', 'alice')));
+  });
+  test('only patients and verified doctors message each other', async () => {
+    await assertFails(send('alice', 'eve', 'alice_eve'));
+    await assertFails(send('alice', 'drnew', 'alice_drnew'));
+    await assertFails(send('drnew', 'alice', 'alice_drnew'));
+    await assertSucceeds(send('drbob', 'eve', 'drbob_eve'));
+  });
+  test('chat list entries need a real conversation', async () => {
+    await assertFails(set(ref(db('eve'), 'ChatList/drbob/eve'), {id: 'eve'}));
+    await assertFails(set(ref(db('eve'), 'ChatList/eve/drbob'), {id: 'drbob'}));
+    await send('eve', 'drbob', 'drbob_eve');
+    await assertSucceeds(set(ref(db('eve'), 'ChatList/eve/drbob'), {id: 'drbob'}));
   });
 });
 

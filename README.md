@@ -257,6 +257,20 @@ Nếu database còn tin nhắn kiểu cũ (nằm thẳng dưới `Chat`), chạy
 powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
 ```
 
+### API key của Firebase
+
+Các giá trị `apiKey` trong [lib/firebase_options.dart](lib/firebase_options.dart) là key client của Firebase. Chúng được thiết kế để công khai: bản web và file APK nào cũng chứa chúng, còn dữ liệu được bảo vệ bằng `database.rules.json` chứ không phải bằng việc giấu key. GitHub secret scanning vẫn sẽ cảnh báo. Hãy đóng các cảnh báo đó với lý do *false positive*.
+
+Để người khác không dùng key gọi các API Google tính phí, hãy giới hạn key trong [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials?project=doctor-app-df8ca):
+
+| Key | Application restrictions |
+|---|---|
+| Android | Android apps: `vn.doctorapp.app` + SHA-1 của từng khóa ký (`keytool -list -v -keystore $env:USERPROFILE.android\debug.keystore -storepass android`) |
+| iOS | iOS apps: `vn.doctorapp.app` |
+| Web | Để None. Workflow n8n dùng key này từ server để gọi Firebase Auth, nên giới hạn theo website sẽ làm hỏng trợ lý AI |
+
+Ở mục **API restrictions** của cả ba key, chỉ cho phép Identity Toolkit API, Token Service API và Firebase Installations API.
+
 ### Đóng góp
 
 Khi thêm hoặc đổi chức năng, cập nhật **cả** `README.md` và `README.en.md` trong cùng commit (xem [CLAUDE.md](CLAUDE.md)).

@@ -257,6 +257,20 @@ If the database still has old-style messages (directly under `Chat`), run this *
 powershell -ExecutionPolicy Bypass -File scripts/migrate-chat.ps1
 ```
 
+### Firebase API keys
+
+The `apiKey` values in [lib/firebase_options.dart](lib/firebase_options.dart) are Firebase client keys. They are meant to be public: every web build and APK contains them, and data is protected by `database.rules.json`, not by hiding the keys. GitHub secret scanning still flags them; close those alerts as *false positive*.
+
+To stop other people using the keys for paid Google APIs, restrict them in [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials?project=doctor-app-df8ca):
+
+| Key | Application restrictions |
+|---|---|
+| Android | Android apps: `vn.doctorapp.app` + the SHA-1 of each signing key (`keytool -list -v -keystore $env:USERPROFILE.android\debug.keystore -storepass android`) |
+| iOS | iOS apps: `vn.doctorapp.app` |
+| Web | None. The n8n workflow calls Firebase Auth with this key from the server, so a website restriction would break the AI assistant |
+
+For **API restrictions** on all three, allow only Identity Toolkit API, Token Service API and Firebase Installations API.
+
 ### Contributing
 
 When you add or change a feature, update **both** `README.md` and `README.en.md` in the same commit (see [CLAUDE.md](CLAUDE.md)).

@@ -265,7 +265,7 @@ To stop other people using the keys for paid Google APIs, restrict them in [Goog
 
 | Key | Application restrictions |
 |---|---|
-| Android | Android apps: `vn.doctorapp.app` + the SHA-1 of each signing key (`keytool -list -v -keystore $env:USERPROFILE.android\debug.keystore -storepass android`) |
+| Android | Android apps: `vn.doctorapp.app` + the SHA-1 of each signing key (`keytool -list -v -keystore $env:USERPROFILE\.android\debug.keystore -storepass android`) |
 | iOS | iOS apps: `vn.doctorapp.app` |
 | Web | None. The n8n workflow calls Firebase Auth with this key from the server, so a website restriction would break the AI assistant |
 

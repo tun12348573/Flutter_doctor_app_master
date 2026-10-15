@@ -265,7 +265,7 @@ Các giá trị `apiKey` trong [lib/firebase_options.dart](lib/firebase_options.
 
 | Key | Application restrictions |
 |---|---|
-| Android | Android apps: `vn.doctorapp.app` + SHA-1 của từng khóa ký (`keytool -list -v -keystore $env:USERPROFILE.android\debug.keystore -storepass android`) |
+| Android | Android apps: `vn.doctorapp.app` + SHA-1 của từng khóa ký (`keytool -list -v -keystore $env:USERPROFILE\.android\debug.keystore -storepass android`) |
 | iOS | iOS apps: `vn.doctorapp.app` |
 | Web | Để None. Workflow n8n dùng key này từ server để gọi Firebase Auth, nên giới hạn theo website sẽ làm hỏng trợ lý AI |
 
